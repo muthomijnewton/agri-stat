@@ -1,0 +1,13 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.xcframework
+android/.gradle
+android/local.properties
+.gradle
+*.iml
+*.lock
