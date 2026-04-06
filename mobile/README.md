@@ -21,6 +21,7 @@ A Flutter mobile application for the Agricultural Statistics Dashboard, enabling
 ## Getting Started
 
 ### 1. Install Flutter
+
 ```bash
 # macOS
 brew install flutter
@@ -29,6 +30,7 @@ brew install flutter
 ```
 
 ### 2. Create/Setup Flutter Project
+
 ```bash
 # If starting fresh
 flutter create --org com.agricstat agric_stat_mobile
@@ -39,6 +41,7 @@ flutter pub get
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 flutter pub get
 ```
@@ -46,6 +49,7 @@ flutter pub get
 ### 4. Run the App
 
 #### iOS
+
 ```bash
 flutter run -d iPhone
 # Or specific device
@@ -53,6 +57,7 @@ flutter run -d "iPhone 14 Pro"
 ```
 
 #### Android
+
 ```bash
 flutter run -d emulator-5554
 # Or Android phone
@@ -60,6 +65,7 @@ flutter run
 ```
 
 #### Web (for testing)
+
 ```bash
 flutter run -d chrome
 ```
@@ -113,6 +119,7 @@ mobile/
 The app connects to the FastAPI backend at `http://localhost:8000/api`.
 
 All API calls are handled through `lib/services/api_service.dart`:
+
 - **Products** - CRUD operations
 - **Transactions** - View and record sales
 - **Forecasts** - Get demand predictions
@@ -121,6 +128,7 @@ All API calls are handled through `lib/services/api_service.dart`:
 ## Building for Production
 
 ### Android
+
 ```bash
 # Build APK
 flutter build apk
@@ -130,6 +138,7 @@ flutter build appbundle
 ```
 
 ### iOS
+
 ```bash
 # Build for physical device
 flutter build ios
@@ -139,6 +148,7 @@ flutter build ios --release
 ```
 
 ### Web
+
 ```bash
 flutter build web
 ```
@@ -159,16 +169,19 @@ flutter test --coverage
 ## Debugging
 
 ### Performance Profiling
+
 ```bash
 flutter run --profile
 ```
 
 ### Debug Mode
+
 ```bash
 flutter run -d emulator-5554 --debug
 ```
 
 ### Log Viewing
+
 ```bash
 flutter logs
 ```
@@ -176,11 +189,13 @@ flutter logs
 ## Common Issues
 
 ### Connection Error to Backend
+
 - Ensure backend is running on `http://localhost:8000`
 - For emulator, use `http://10.0.2.2:8000` on Android
 - For iOS simulator, use `http://localhost:8000`
 
 ### CocoaPods Issues (iOS)
+
 ```bash
 cd ios
 rm -rf Pods Podfile.lock
@@ -190,6 +205,7 @@ flutter pub get
 ```
 
 ### Gradle Issues (Android)
+
 ```bash
 flutter clean
 flutter pub get

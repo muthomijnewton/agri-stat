@@ -1,11 +1,11 @@
 name: agric_stat_mobile
 description: Agricultural Statistics Dashboard - Mobile App for demand forecasting and inventory optimization
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:

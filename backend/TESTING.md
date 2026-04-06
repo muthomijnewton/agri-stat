@@ -129,13 +129,13 @@ def test_create_transaction(client, sample_product, sample_user):
 ✅ Database table creation  
 ✅ Health check endpoint  
 ✅ Pagination  
-✅ Basic forecasts  
+✅ Basic forecasts
 
 ### Areas for Improvement
 
 ⚠️ Foreign key constraint handling in certain edge cases  
 ⚠️ Complex filtering sometimes requires additional setup  
-⚠️ Some service tests need more historical data  
+⚠️ Some service tests need more historical data
 
 ## Debugging Tests
 
@@ -145,11 +145,11 @@ def test_create_transaction(client, sample_product, sample_user):
 def test_debug(db_session):
     """Debug test to inspect database."""
     from sqlalchemy import inspect
-    
+
     inspector = inspect(db_session.get_bind())
     tables = inspector.get_table_names()
     print(f"Tables: {tables}")
-    
+
     # Query data
     products = db_session.query(Product).all()
     print(f"Products: {products}")
