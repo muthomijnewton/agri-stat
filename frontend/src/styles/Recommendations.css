@@ -1,0 +1,148 @@
+.recommendations-page {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recommendations-page h1 {
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.recommendation-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-card.status-pending {
+  border-left: 4px solid #ffc107;
+}
+
+.recommendation-card.status-approved {
+  border-left: 4px solid #17a2b8;
+}
+
+.recommendation-card.status-implemented {
+  border-left: 4px solid #28a745;
+}
+
+.card-header {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.approved {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-badge.implemented {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.card-body {
+  padding: 15px;
+}
+
+.recommendation-item {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recommendation-item label {
+  font-weight: 600;
+  color: #666;
+  font-size: 14px;
+}
+
+.recommendation-item .value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.recommendation-reason {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
+}
+
+.recommendation-reason label {
+  display: block;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.recommendation-reason p {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.card-footer {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.status-text {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.text-center {
+  text-align: center;
+  color: #999;
+  padding: 40px 20px;
+}
+
+@media (max-width: 768px) {
+  .recommendations-grid {
+    grid-template-columns: 1fr;
+  }
+}
