@@ -1,42 +1,52 @@
-import React, { useEffect, useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { transactionsAPI } from '../services/api'
+import React, { useEffect, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { transactionsAPI } from "../services/api";
 
 function DemandChart() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTransactionData()
-  }, [])
+    fetchTransactionData();
+  }, []);
 
   const fetchTransactionData = async () => {
     try {
-      const response = await transactionsAPI.list(0, 100)
-      const grouped = {}
-      
-      response.data.forEach(t => {
-        const date = t.transaction_date
+      const response = await transactionsAPI.list(0, 100);
+      const grouped = {};
+
+      response.data.forEach((t) => {
+        const date = t.transaction_date;
         if (!grouped[date]) {
-          grouped[date] = { date, quantity: 0 }
+          grouped[date] = { date, quantity: 0 };
         }
-        grouped[date].quantity += t.quantity
-      })
+        grouped[date].quantity += t.quantity;
+      });
 
-      const sorted = Object.values(grouped).sort((a, b) => 
-        new Date(a.date) - new Date(b.date)
-      ).slice(-30)
+      const sorted = Object.values(grouped)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(-30);
 
-      setData(sorted)
+      setData(sorted);
     } catch (err) {
-      console.error('Error fetching transaction data:', err)
+      console.error("Error fetching transaction data:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (loading) return <div className="chart-container loading">Loading...</div>
-  if (data.length === 0) return <div className="chart-container">No data available</div>
+  if (loading) return <div className="chart-container loading">Loading...</div>;
+  if (data.length === 0)
+    return <div className="chart-container">No data available</div>;
 
   return (
     <div className="chart-container">
@@ -52,7 +62,7 @@ function DemandChart() {
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
 
-export default DemandChart
+export default DemandChart;

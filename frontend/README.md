@@ -5,7 +5,8 @@ This is the React frontend for the Agricultural Statistics Dashboard.
 ## Setup
 
 ### Prerequisites
-- Node.js 16+ 
+
+- Node.js 16+
 - npm or yarn
 
 ### Installation
@@ -66,6 +67,7 @@ frontend/
 The frontend connects to the FastAPI backend at `http://localhost:8000`.
 
 All API calls are handled through `src/services/api.js`:
+
 - `productsAPI` - Product CRUD operations
 - `transactionsAPI` - Transaction management
 - `forecastsAPI` - Demand forecasts
@@ -76,6 +78,7 @@ All API calls are handled through `src/services/api.js`:
 The application uses CSS modules and custom stylesheets for layout and styling.
 
 Key style files:
+
 - `styles/App.css` - Main app styles
 - `styles/Dashboard.css` - Dashboard page styles
 - `styles/Navbar.css` - Navigation styles
