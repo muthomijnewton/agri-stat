@@ -1,5 +1,5 @@
 .recommendations-page {
-  background-color: white;
+  background-color: var(--color-bg);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -20,7 +20,7 @@
   border: 1px solid #dee2e6;
   border-radius: 8px;
   overflow: hidden;
-  background: white;
+  background: var(--color-bg);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;

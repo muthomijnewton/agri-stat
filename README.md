@@ -1,107 +1,287 @@
-# Agricultural Statistics Dashboard
+# 🌾 Agricultural Statistics Dashboard
 
-A web and mobile application for demand forecasting and inventory optimization to reduce agricultural produce waste.
+A production-ready full-stack application for agricultural businesses to track inventory, forecast demand, optimize stock levels, and reduce waste through AI-powered analytics.
 
-## 🌾 Overview
+**Quick Links:** [Get Started](GET_STARTED.md) • [API Docs](http://localhost:8000/docs) • [System Overview](#-technology-stack)
 
-This system helps agricultural distributors by:
-- 📊 Analyzing historical sales data
-- 📈 Forecasting future demand using AI (Prophet & ARIMA models)
-- 💡 Recommending optimal inventory levels
-- 📉 Reducing agricultural waste through better planning
+## 📋 What Does This App Do?
 
-**University of Eastern Africa, Baraton**  
-**Course:** INSY 492 - Senior Project  
-**Student:** Newton Jones Muthomi (SNEWJO2011)  
-**Supervisor:** Omari Dickson
+The Agricultural Statistics Dashboard helps you:
+
+- **Track Inventory** - Manage all your agricultural products in one place
+- **Monitor Sales** - Record and analyze every transaction
+- **Predict Demand** - Use AI to forecast future product demand
+- **Optimize Stock** - Get smart recommendations for inventory levels
+- **Reduce Waste** - Avoid overstocking that leads to spoilage
+- **Take Action** - Make data-driven decisions with visual analytics
+
+**Perfect for:** Farms, cooperatives, agricultural distributors, agricultural retailers
 
 ---
 
-## 📁 Project Structure
+## ⚡ Quick Start (2 Minutes)
+
+### System Requirements
+- Python 3.13+
+- Node.js 18+  
+- Git (optional, for cloning)
+
+### Get It Running
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate        # (venv\Scripts\activate on Windows)
+pip install -r requirements.txt
+python init_db.py
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+**Then open:** http://localhost:3001
+
+✅ **That's it! App is running.**
+
+### Need Detailed Help?
+👉 **[Complete Setup Guide for Windows/macOS/Linux](GET_STARTED.md)**
 
 ```
 agric-stat-dash/
-├── backend/                    # FastAPI REST API
+├── backend/                    # FastAPI REST API (Python)
 │   ├── app/
-│   │   ├── api/               # API endpoints
-│   │   │   └── endpoints/     # (products, transactions, forecasts, recommendations)
-│   │   ├── models/            # SQLAlchemy ORM models
-│   │   ├── schemas/           # Pydantic validation schemas
-│   │   ├── services/          # Business logic (forecasting, calculations)
-│   │   ├── db/                # Database configuration
-│   │   ├── core/              # Settings and configuration
-│   │   └── main.py            # FastAPI app entry point
-│   ├── tests/                 # Unit and integration tests
-│   └── requirements.txt       # Python dependencies
-├── web/                       # React 18 Frontend
+│   │   ├── routes/            # API endpoint handlers
+│   │   ├── models/            # SQLAlchemy ORM models (User, Product, Transaction, Forecast, Recommendation)
+│   │   ├── services/          # Business logic (forecasting, inventory optimization)
+│   │   ├── core/              # Configuration and database settings
+│   │   └── main.py            # FastAPI application entry point
+│   ├── tests/                 # pytest test suite (55+ tests)
+│   ├── requirements.txt       # Python package dependencies
+│   └── README.md              # Backend-specific documentation
+├── frontend/                  # React + Vite web application
 │   ├── src/
-│   │   ├── pages/            # Page components
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Products.jsx
+│   │   ├── pages/            # Dashboard pages (5 pages)
+│   │   │   ├── Dashboard.jsx  # Main dashboard with stats
+│   │   │   ├── Products.jsx   # Product management
 │   │   │   ├── Transactions.jsx
 │   │   │   ├── Forecasts.jsx
 │   │   │   └── Recommendations.jsx
-│   │   ├── services/          # API integration layer
-│   │   ├── css/               # Stylesheets
-│   │   ├── App.jsx            # Main React component
-│   │   └── main.jsx           # React entry point
-│   ├── package.json          # Node.js dependencies
-│   ├── vite.config.js        # Vite build configuration
-│   ├── index.html            # HTML entry
-│   └── README.md             # Frontend documentation
-├── mobile/                     # Mobile app (Coming Soon)
-│   └── src/
-│       ├── screens/          # Mobile screens
-│       ├── components/       # Reusable components
-│       └── services/         # API services
-├── docs/                      # Documentation
-├── venv/                      # Python virtual environment
-├── .env                       # Environment variables (local, not committed)
-├── .env.example               # Environment template
-├── requirements.txt           # Python dependencies
-├── requirements-base.txt      # Core dependencies (minimal)
-├── init_db.py                # Database initialization script
-├── setup_db.sh               # Database setup shell script
-├── run_backend.sh            # Backend startup script
-├── run_frontend.sh           # Frontend startup script
+│   │   ├── components/        # Reusable React components (8+)
+│   │   ├── services/          # API client (api.js with Axios)
+│   │   └── styles/            # CSS stylesheets
+│   ├── package.json          # npm dependencies
+│   ├── vite.config.js        # Vite bundler configuration
+│   └── README.md              # Frontend-specific documentation
+├── mobile/                    # Flutter mobile application
+│   ├── lib/
+│   │   ├── screens/          # Mobile screens (5 screens matching web)
+│   │   ├── widgets/          # Reusable Flutter widgets
+│   │   ├── models/           # Data models with JSON serialization
+│   │   ├── services/         # Dio API client
+│   │   └── main.dart         # App entry point
+│   ├── pubspec.yaml          # Flutter package dependencies
+│   └── README.md              # Mobile-specific documentation
+├── docs/                      # Project documentation
+│   ├── API.md                # REST API endpoint reference
+│   └── ARCHITECTURE.md       # System architecture
+├── .gitignore                # Git ignore configuration
+├── .env.example              # Example environment variables
+├── RUN_LOCALLY.md            # Complete local setup guide ⭐ START HERE
+├── QUICK_START.md            # Quick reference for starting servers
+├── SYSTEM_STATUS.md          # Current system status overview
 └── README.md                 # This file
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (3 Steps)
 
-### Option 1: Run Both Services
+> ⭐ **For detailed setup**: See [RUN_LOCALLY.md](RUN_LOCALLY.md)
 
-**Terminal 1 - Backend:**
+### Prerequisites
 ```bash
-./run_backend.sh
-# Backend at http://localhost:8000
-# API docs at http://localhost:8000/docs
+python --version      # 3.13+
+node --version       # 18+
+npm --version        # 9+
 ```
 
-**Terminal 2 - Frontend:**
+### Step 1: Backend (Terminal 1)
 ```bash
-./run_frontend.sh
-# Frontend at http://localhost:5173
-```
-
-### Option 2: Manual Setup
-
-**Backend:**
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
 cd backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
 ```
+✅ Backend running: http://localhost:8000/docs
 
-**Frontend:**
+### Step 2: Frontend (Terminal 2)
 ```bash
-cd web
+cd frontend
 npm install
 npm run dev
 ```
+✅ Frontend running: http://localhost:5173
+
+### Step 3: Open App
+Open http://localhost:5173 in your browser
+
+---
+
+## 📚 Documentation
+
+| Document | For |
+|----------|-----|
+| **[GET_STARTED.md](GET_STARTED.md)** | Complete setup guide with troubleshooting |
+| **[README.md](README.md)** | This file - Project overview |
+
+---
+
+## 🔧 Development
+
+### Run Tests
+```bash
+cd backend
+pytest tests/ -v              # All tests
+pytest tests/ --cov=app      # With coverage report
+```
+
+### API Documentation
+When backend is running: http://localhost:8000/docs (Swagger UI)
+
+### Project Commands
+```bash
+# Backend
+cd backend && PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd frontend && npm install && npm run dev
+
+# Tests
+cd backend && pytest tests/ -v
+```
+
+---
+
+## 🌐 API Endpoints
+
+### Products
+- `GET /api/products` - List products
+- `POST /api/products` - Create product
+- `GET /api/products/{id}` - Get details
+- `PUT /api/products/{id}` - Update
+- `DELETE /api/products/{id}` - Delete
+
+### Transactions
+- `GET /api/transactions` - List transactions
+- `POST /api/transactions` - Record transaction
+
+### Forecasts
+- `GET /api/forecasts` - List forecasts
+- `POST /api/forecasts` - Create forecast
+
+### Recommendations
+- `GET /api/recommendations` - List recommendations
+- `PUT /api/recommendations/{id}/approve` - Approve
+
+**Full docs**: http://localhost:8000/docs
+
+---
+
+## 🐛 Troubleshooting
+
+See detailed troubleshooting guide in [RUN_LOCALLY.md](RUN_LOCALLY.md)
+
+**Quick fixes**:
+```bash
+# Port 8000 in use
+lsof -i :8000 && kill -9 <PID>
+
+# npm issues
+npm cache clean --force && npm install
+
+# Python imports
+export PYTHONPATH=./backend
+```
+
+---
+
+## 🚢 Deployment
+
+See each component's README:
+- [backend/README.md](backend/README.md) - Backend deployment
+- [frontend/README.md](frontend/README.md) - Frontend deployment
+- [mobile/README.md](mobile/README.md) - Mobile deployment
+
+---
+
+## 📝 Git & GitHub Notes
+
+### Use Relative Paths in Documentation
+✅ **DO**:
+```markdown
+cd backend          # Relative path
+npm install         # Uses current directory
+```
+
+❌ **DON'T**:
+```markdown
+cd /home/user/projects/agric-stat-dash/backend   # Absolute path - breaks for others
+```
+
+### Never Commit
+```
+.env                # Secrets
+venv/ node_modules/ # Dependencies
+__pycache__/        # Python cache
+.DS_Store dist/     # OS files & builds
+```
+
+### Environment Setup
+```bash
+# Create from template
+cp .env.example .env
+# Edit with your values
+nano .env
+```
+
+---
+
+## 📋 Checklist Before Pushing
+
+- [ ] Used relative paths in all documentation
+- [ ] Run tests: `cd backend && pytest tests/ -v`
+- [ ] Check `.gitignore` excludes sensitive files
+- [ ] `.env` file NOT committed (use `.env.example`)
+- [ ] `node_modules/`, `venv/` NOT committed
+- [ ] README points to [RUN_LOCALLY.md](RUN_LOCALLY.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/name`
+3. Make changes & test: `pytest tests/ -v`
+4. Use relative paths in docs
+5. Commit: `git commit -m "feat: description"`
+6. Push: `git push origin feature/name`
+7. Create Pull Request
+
+---
+
+## 📧 Support
+
+- **Documentation**: See [RUN_LOCALLY.md](RUN_LOCALLY.md) first
+- **Backend issues**: Check [backend/README.md](backend/README.md)
+- **Frontend issues**: Check [frontend/README.md](frontend/README.md)
+- **GitHub issues**: Create an issue in this repository
 
 ---
 

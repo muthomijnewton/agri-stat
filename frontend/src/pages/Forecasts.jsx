@@ -15,13 +15,36 @@ function Forecasts() {
   const fetchForecasts = async () => {
     try {
       setLoading(true);
+      console.log('📈 Fetching forecasts...');
       const response = await forecastsAPI.list(0, 100);
+      console.log('✅ Forecasts loaded:', response.data);
       setForecasts(response.data);
+      setError(null);
     } catch (err) {
-      setError("Failed to load forecasts");
-      console.error(err);
+      const errorMsg = err.response?.data?.detail || err.message || "Failed to load forecasts";
+      console.error('❌ Error loading forecasts:', errorMsg);
+      setError(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteForecast = async (forecastId) => {
+    if (!window.confirm('Are you sure you want to delete this forecast?')) {
+      return;
+    }
+    try {
+      console.log('🗑️ Deleting forecast:', forecastId);
+      await forecastsAPI.delete(forecastId);
+      console.log('✅ Forecast deleted successfully');
+      setError(null);
+      fetchForecasts();
+      alert('✅ Forecast deleted successfully!');
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || 'Failed to delete forecast';
+      console.error('❌ Error deleting forecast:', errorMsg);
+      setError(errorMsg);
+      alert('❌ Error: ' + errorMsg);
     }
   };
 
@@ -47,12 +70,13 @@ function Forecasts() {
                 <th>Confidence Upper</th>
                 <th>Model</th>
                 <th>Accuracy</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {forecasts.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center">
+                  <td colSpan="8" className="text-center">
                     No forecasts found
                   </td>
                 </tr>
@@ -66,9 +90,19 @@ function Forecasts() {
                     <td>{f.confidence_upper || "-"}</td>
                     <td>{f.model_type || "-"}</td>
                     <td>
-                      {f.accuracy_score
+                      {f.accuracy_score && typeof f.accuracy_score === 'number'
                         ? f.accuracy_score.toFixed(2) + "%"
+                        : f.accuracy_score
+                        ? parseFloat(f.accuracy_score).toFixed(2) + "%"
                         : "-"}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleDeleteForecast(f.id)}
+                        className="btn-delete"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))

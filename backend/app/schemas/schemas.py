@@ -27,6 +27,19 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+# ============== Login Schemas ==============
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: Optional[str]
+    is_admin: bool
+    message: str = "Login successful"
+
 # ============== Product Schemas ==============
 class ProductBase(BaseModel):
     name: str
