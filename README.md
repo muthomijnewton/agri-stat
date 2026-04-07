@@ -22,13 +22,15 @@ The Agricultural Statistics Dashboard helps you:
 ## ⚡ Quick Start (2 Minutes)
 
 ### System Requirements
+
 - Python 3.13+
-- Node.js 18+  
+- Node.js 18+
 - Git (optional, for cloning)
 
 ### Get It Running
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd backend
 python -m venv venv
@@ -39,6 +41,7 @@ python -m uvicorn app.main:app --reload --port 8000
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm install
@@ -50,6 +53,7 @@ npm run dev
 ✅ **That's it! App is running.**
 
 ### Need Detailed Help?
+
 👉 **[Complete Setup Guide for Windows/macOS/Linux](GET_STARTED.md)**
 
 ```
@@ -105,6 +109,7 @@ agric-stat-dash/
 > ⭐ **For detailed setup**: See [RUN_LOCALLY.md](RUN_LOCALLY.md)
 
 ### Prerequisites
+
 ```bash
 python --version      # 3.13+
 node --version       # 18+
@@ -112,6 +117,7 @@ npm --version        # 9+
 ```
 
 ### Step 1: Backend (Terminal 1)
+
 ```bash
 cd backend
 python -m venv venv
@@ -119,33 +125,38 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
 ```
+
 ✅ Backend running: http://localhost:8000/docs
 
 ### Step 2: Frontend (Terminal 2)
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 ✅ Frontend running: http://localhost:5173
 
 ### Step 3: Open App
+
 Open http://localhost:5173 in your browser
 
 ---
 
 ## 📚 Documentation
 
-| Document | For |
-|----------|-----|
+| Document                             | For                                       |
+| ------------------------------------ | ----------------------------------------- |
 | **[GET_STARTED.md](GET_STARTED.md)** | Complete setup guide with troubleshooting |
-| **[README.md](README.md)** | This file - Project overview |
+| **[README.md](README.md)**           | This file - Project overview              |
 
 ---
 
 ## 🔧 Development
 
 ### Run Tests
+
 ```bash
 cd backend
 pytest tests/ -v              # All tests
@@ -153,9 +164,11 @@ pytest tests/ --cov=app      # With coverage report
 ```
 
 ### API Documentation
+
 When backend is running: http://localhost:8000/docs (Swagger UI)
 
 ### Project Commands
+
 ```bash
 # Backend
 cd backend && PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
@@ -172,6 +185,7 @@ cd backend && pytest tests/ -v
 ## 🌐 API Endpoints
 
 ### Products
+
 - `GET /api/products` - List products
 - `POST /api/products` - Create product
 - `GET /api/products/{id}` - Get details
@@ -179,14 +193,17 @@ cd backend && pytest tests/ -v
 - `DELETE /api/products/{id}` - Delete
 
 ### Transactions
+
 - `GET /api/transactions` - List transactions
 - `POST /api/transactions` - Record transaction
 
 ### Forecasts
+
 - `GET /api/forecasts` - List forecasts
 - `POST /api/forecasts` - Create forecast
 
 ### Recommendations
+
 - `GET /api/recommendations` - List recommendations
 - `PUT /api/recommendations/{id}/approve` - Approve
 
@@ -199,6 +216,7 @@ cd backend && pytest tests/ -v
 See detailed troubleshooting guide in [RUN_LOCALLY.md](RUN_LOCALLY.md)
 
 **Quick fixes**:
+
 ```bash
 # Port 8000 in use
 lsof -i :8000 && kill -9 <PID>
@@ -215,6 +233,7 @@ export PYTHONPATH=./backend
 ## 🚢 Deployment
 
 See each component's README:
+
 - [backend/README.md](backend/README.md) - Backend deployment
 - [frontend/README.md](frontend/README.md) - Frontend deployment
 - [mobile/README.md](mobile/README.md) - Mobile deployment
@@ -224,18 +243,22 @@ See each component's README:
 ## 📝 Git & GitHub Notes
 
 ### Use Relative Paths in Documentation
+
 ✅ **DO**:
+
 ```markdown
-cd backend          # Relative path
-npm install         # Uses current directory
+cd backend # Relative path
+npm install # Uses current directory
 ```
 
 ❌ **DON'T**:
+
 ```markdown
-cd /home/user/projects/agric-stat-dash/backend   # Absolute path - breaks for others
+cd /home/user/projects/agric-stat-dash/backend # Absolute path - breaks for others
 ```
 
 ### Never Commit
+
 ```
 .env                # Secrets
 venv/ node_modules/ # Dependencies
@@ -244,6 +267,7 @@ __pycache__/        # Python cache
 ```
 
 ### Environment Setup
+
 ```bash
 # Create from template
 cp .env.example .env
@@ -288,62 +312,70 @@ nano .env
 ## 🛠️ Technology Stack
 
 ### Backend
-| Component | Technology |
-|-----------|-----------|
-| Framework | FastAPI (Python 3.13) |
-| Database | PostgreSQL 12+ |
-| ORM | SQLAlchemy 2.0 |
+
+| Component   | Technology                    |
+| ----------- | ----------------------------- |
+| Framework   | FastAPI (Python 3.13)         |
+| Database    | PostgreSQL 12+                |
+| ORM         | SQLAlchemy 2.0                |
 | Forecasting | Prophet & ARIMA (StatsModels) |
-| API Docs | Swagger/OpenAPI |
-| Async | Uvicorn ASGI Server |
+| API Docs    | Swagger/OpenAPI               |
+| Async       | Uvicorn ASGI Server           |
 
 ### Frontend
-| Component | Technology |
-|-----------|-----------|
-| Framework | React 18 |
-| Build Tool | Vite |
-| Routing | React Router DOM |
-| HTTP Client | Axios |
-| Styling | CSS3 + CSS Variables |
-| Layout | CSS Grid/Flexbox |
+
+| Component   | Technology           |
+| ----------- | -------------------- |
+| Framework   | React 18             |
+| Build Tool  | Vite                 |
+| Routing     | React Router DOM     |
+| HTTP Client | Axios                |
+| Styling     | CSS3 + CSS Variables |
+| Layout      | CSS Grid/Flexbox     |
 
 ### Database
-| Table | Purpose |
-|-------|---------|
-| users | User accounts and roles |
-| products | Agricultural product inventory |
-| transactions | Sales and purchase records |
-| forecasts | AI demand predictions |
-| inventory_recommendations | Stock level suggestions |
+
+| Table                     | Purpose                        |
+| ------------------------- | ------------------------------ |
+| users                     | User accounts and roles        |
+| products                  | Agricultural product inventory |
+| transactions              | Sales and purchase records     |
+| forecasts                 | AI demand predictions          |
+| inventory_recommendations | Stock level suggestions        |
 
 ---
 
 ## 📦 Core Modules
 
 ### 1. **Admin Module**
+
 - Manage users and system settings
 - Configure forecasting parameters
 - Set safety stock multipliers
 
 ### 2. **Data Management Module**
+
 - Add/edit/delete products
 - Record transactions
 - Track historical data
 - Data validation and cleanup
 
 ### 3. **Demand Forecasting Module**
+
 - Analyze transaction history
 - Generate forecasts using Prophet/ARIMA
 - Calculate confidence intervals
 - Model accuracy tracking (MAPE)
 
 ### 4. **Inventory Recommendation Module**
+
 - Calculate optimal stock levels
 - Apply safety stock formulas
 - Consider lead times
 - Track recommendation workflow (pending → approved → implemented)
 
 ### 5. **Reporting Module**
+
 - Dashboard with KPIs
 - Trend analysis
 - Forecast visualization
@@ -354,6 +386,7 @@ nano .env
 ## 🔌 API Endpoints
 
 ### Products
+
 ```
 GET    /api/products              # List products (paginated)
 GET    /api/products/{id}         # Get product details
@@ -363,6 +396,7 @@ DELETE /api/products/{id}         # Delete product (soft delete)
 ```
 
 ### Transactions
+
 ```
 GET    /api/transactions                           # List with filters
 GET    /api/transactions/{id}                      # Get details
@@ -374,6 +408,7 @@ DELETE /api/transactions/{id}                      # Delete
 Filters: `product_id`, `start_date`, `end_date`
 
 ### Forecasts
+
 ```
 GET    /api/forecasts                              # List forecasts
 GET    /api/forecasts/{id}                         # Get details
@@ -384,6 +419,7 @@ DELETE /api/forecasts/{id}                         # Delete
 ```
 
 ### Recommendations
+
 ```
 GET    /api/recommendations                        # List recommendations
 GET    /api/recommendations/{id}                   # Get details
@@ -400,23 +436,27 @@ DELETE /api/recommendations/{id}                   # Delete
 ## 🖥️ Web Frontend Features
 
 ### Dashboard
+
 - Real-time statistics (products, transactions, forecasts, pending recommendations)
 - Quick access to all modules
 - System overview and instructions
 
 ### Products Management
+
 - Add new agricultural products
 - Set product categories and pricing
 - View all products in a table
 - Delete products (soft delete)
 
 ### Transactions
+
 - Record sales or purchases
 - Auto-calculate totals
 - Filter by date range and product
 - View transaction history
 
 ### Demand Forecasts
+
 - View AI-generated predictions
 - Filter by product
 - See confidence intervals (lower/upper bounds)
@@ -424,6 +464,7 @@ DELETE /api/recommendations/{id}                   # Delete
 - Understand forecasting methods (Prophet vs ARIMA)
 
 ### Inventory Recommendations
+
 - View recommended stock levels
 - Track recommendation status (pending → approved → implemented)
 - Approve recommendations
@@ -431,6 +472,7 @@ DELETE /api/recommendations/{id}                   # Delete
 - View recommendation rationale
 
 ### UI Features
+
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Color-coded status badges
 - ✅ Intuitive forms with validation
@@ -445,6 +487,7 @@ DELETE /api/recommendations/{id}                   # Delete
 ### Environment Variables
 
 **Backend (.env):**
+
 ```env
 # Database
 DB_USER=postgres
@@ -472,6 +515,7 @@ ENVIRONMENT=development
 ```
 
 **Frontend (.env in web/):**
+
 ```env
 REACT_APP_API_URL=http://localhost:8000/api
 ```
@@ -481,17 +525,20 @@ REACT_APP_API_URL=http://localhost:8000/api
 ## 📊 Database Setup
 
 ### Using Script:
+
 ```bash
 ./setup_db.sh
 ```
 
 ### Using Python:
+
 ```bash
 source venv/bin/activate
 python init_db.py
 ```
 
 ### Manual PostgreSQL:
+
 ```sql
 CREATE DATABASE agric_stat_db;
 ```
@@ -501,12 +548,14 @@ CREATE DATABASE agric_stat_db;
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 source venv/bin/activate
 python -m pytest backend/tests/ -v
 ```
 
 ### Frontend Tests
+
 ```bash
 cd web
 npm test
@@ -517,12 +566,14 @@ npm test
 ## 📦 Building for Production
 
 ### Backend
+
 ```bash
 # No build needed, just configure production environment
 gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker
 ```
 
 ### Frontend
+
 ```bash
 cd web
 npm run build
@@ -534,12 +585,14 @@ npm run build
 ## 🚀 Deployment Options
 
 ### Backend
+
 - **Heroku** - `git push heroku main`
 - **Railway** - Connect GitHub repo
 - **DigitalOcean** - Docker deployment
 - **AWS** - EC2 + RDS
 
 ### Frontend
+
 - **Vercel** - Connect GitHub repo
 - **Netlify** - Drag & drop `dist/` folder
 - **GitHub Pages** - Static hosting
@@ -550,21 +603,25 @@ npm run build
 ## 📚 Key Features Explained
 
 ### Demand Forecasting
+
 - **Method 1 - Prophet:** Facebook's time-series library, great for seasonal data
 - **Method 2 - ARIMA:** Classical statistical approach for trends
 - **Accuracy:** Calculated using MAPE (Mean Absolute Percentage Error)
 
 ### Inventory Recommendations Formula
+
 ```
 Recommended Stock = (Avg Daily Demand × Lead Time) × Safety Factor
                   = (Avg Daily Demand × 3 days) × 1.5
 ```
 
 This ensures:
+
 - Enough stock for 3-day supply chain lead time
 - 50% safety buffer for demand variability
 
 ### Workflow
+
 ```
 1. Add Products → 2. Record Transactions → 3. System Generates Forecasts
    → 4. System Creates Recommendations → 5. Approve Recommendations
@@ -595,21 +652,21 @@ def get_all(db: Session = Depends(get_db)):
 
 ```jsx
 // web/src/pages/NewPage.jsx
-import { useState, useEffect } from 'react'
-import { api } from '../services/api'
+import { useState, useEffect } from "react";
+import { api } from "../services/api";
 
 export default function NewPage() {
-  const [data, setData] = useState([])
-  
+  const [data, setData] = useState([]);
+
   useEffect(() => {
-    loadData()
-  }, [])
-  
+    loadData();
+  }, []);
+
   const loadData = async () => {
     // Implementation
-  }
-  
-  return <div>Your component</div>
+  };
+
+  return <div>Your component</div>;
 }
 ```
 
@@ -618,6 +675,7 @@ export default function NewPage() {
 ## 🐛 Troubleshooting
 
 ### Backend Issues
+
 ```
 Issue: Database connection refused
 Fix: Check PostgreSQL is running and credentials in .env
@@ -630,6 +688,7 @@ Fix: Ensure virtual environment is activated and pip install -r requirements.txt
 ```
 
 ### Frontend Issues
+
 ```
 Issue: API not responding
 Fix: Check backend is running at http://localhost:8000
@@ -662,6 +721,7 @@ INSY 492 - Senior Project (2026)
 ## 📞 Support
 
 For questions or issues:
+
 1. Check API documentation: `http://localhost:8000/docs`
 2. Review README files in backend/ and web/ directories
 3. Check error messages and logs
@@ -683,7 +743,3 @@ For questions or issues:
 - [ ] Batch recommendations generation
 
 ---
-
-**Last Updated:** April 6, 2026
-
-Happy forecasting! 🌾📊
