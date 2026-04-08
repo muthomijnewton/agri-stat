@@ -1,39 +1,42 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
-import '../styles/Login.css';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
+import "../styles/Login.css";
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const response = await authAPI.login(username, password);
       const data = response.data;
-      
+
       // Save user to localStorage
-      localStorage.setItem('user', JSON.stringify(data));
-      localStorage.setItem('isAuthenticated', 'true');
-      
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("isAuthenticated", "true");
+
       // Notify parent component
       if (onLogin) {
         onLogin();
       }
-      
+
       // Navigate to dashboard
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      const errorMsg = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
+      const errorMsg =
+        err.response?.data?.detail ||
+        err.message ||
+        "Login failed. Please try again.";
       setError(errorMsg);
-      console.error('Login error:', err);
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -77,14 +80,18 @@ export default function Login({ onLogin }) {
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
         <div className="login-info">
           <p className="hint">Demo Credentials:</p>
-          <p className="credentials">Username: <strong>somi</strong></p>
-          <p className="credentials">Password: <strong>1234</strong></p>
+          <p className="credentials">
+            Username: <strong>somi</strong>
+          </p>
+          <p className="credentials">
+            Password: <strong>1234</strong>
+          </p>
         </div>
       </div>
     </div>
