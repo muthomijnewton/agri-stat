@@ -95,4 +95,12 @@ export const recommendationsAPI = {
     api.delete(`/recommendations/${id}`)
 }
 
+// Auth API
+export const authAPI = {
+  login: (username, password) => 
+    api.post('/auth/login', { username, password }),
+  verify: (username, password) => 
+    api.post('/auth/verify', { username, password })
+}
+
 export default api

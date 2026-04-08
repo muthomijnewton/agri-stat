@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 import '../styles/Login.css';
 
 export default function Login({ onLogin }) {
@@ -15,23 +16,8 @@ export default function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Login failed');
-      }
-
-      const data = await response.json();
+      const response = await authAPI.login(username, password);
+      const data = response.data;
       
       // Save user to localStorage
       localStorage.setItem('user', JSON.stringify(data));
@@ -45,7 +31,9 @@ export default function Login({ onLogin }) {
       // Navigate to dashboard
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      const errorMsg = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
+      setError(errorMsg);
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
