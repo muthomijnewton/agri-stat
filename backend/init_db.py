@@ -27,25 +27,25 @@ def add_default_user():
     
     try:
         # Check if user already exists
-        existing_user = db.query(User).filter(User.username == "somi").first()
+        existing_user = db.query(User).filter(User.username == "admin@agri").first()
         if existing_user:
-            print("⚠️  User 'somi' already exists, skipping user creation")
+            print("⚠️  User 'admin@agri' already exists, skipping user creation")
             return
         
         print("\n👤 Adding default user...")
         
         # Create default user with simple password (in production, use hashing)
         user = User(
-            username="somi",
-            email="somi@agric-stat.local",
+            username="admin@agri",
+            email="admin@agric-stat.local",
             password="1234",  # Simple password for testing
-            full_name="System User",
+            full_name="Admin User",
             is_admin=True,
             is_active=True
         )
         db.add(user)
         db.commit()
-        print("✅ Default user 'somi' created successfully")
+        print("✅ Default user 'admin@agri' created successfully")
         
     except Exception as e:
         db.rollback()

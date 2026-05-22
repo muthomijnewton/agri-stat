@@ -83,16 +83,6 @@ export default function Login({ onLogin }) {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        <div className="login-info">
-          <p className="hint">Demo Credentials:</p>
-          <p className="credentials">
-            Username: <strong>somi</strong>
-          </p>
-          <p className="credentials">
-            Password: <strong>1234</strong>
-          </p>
-        </div>
       </div>
     </div>
   );

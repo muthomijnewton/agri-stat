@@ -1,46 +1,216 @@
-# 🌾 Agricultural Statistics Dashboard
+# 🌾 AgricStat
+Agricultural Intelligence & Forecasting Infrastructure for Cooperative-Scale Decision Making
 
-A production-ready full-stack application for agricultural businesses to track inventory, forecast demand, optimize stock levels, and reduce waste through AI-powered analytics.
+AgricStat is a production-grade agricultural analytics platform built to help farms, cooperatives, distributors, and agricultural retailers optimize inventory, forecast product demand, reduce waste, and improve operational decision-making through intelligent statistical modeling.
 
-**Quick Links:** [Get Started](GET_STARTED.md) • [API Docs](http://localhost:8000/docs) • [System Overview](#-technology-stack)
+Designed for fragmented agricultural markets where visibility, trust, and forecasting precision are often weak, AgricStat transforms historical transaction data into actionable inventory intelligence.
 
-## 📋 What Does This App Do?
+## Why AgricStat Exists
 
-The Agricultural Statistics Dashboard helps you:
+Agricultural systems across emerging and fragmented markets often face:
 
-- **Track Inventory** - Manage all your agricultural products in one place
-- **Monitor Sales** - Record and analyze every transaction
-- **Predict Demand** - Use AI to forecast future product demand
-- **Optimize Stock** - Get smart recommendations for inventory levels
-- **Reduce Waste** - Avoid overstocking that leads to spoilage
-- **Take Action** - Make data-driven decisions with visual analytics
+- Inconsistent inventory visibility
+- Overstocking and spoilage losses
+- Reactive purchasing decisions
+- Weak demand forecasting capability
+- Limited operational analytics
+- Poor planning coordination across supply actors
 
-**Perfect for:** Farms, cooperatives, agricultural distributors, agricultural retailers
+These inefficiencies reduce profitability, increase waste, and weaken supply chain resilience.
 
----
+AgricStat addresses this by providing predictive decision-support infrastructure for agricultural businesses operating in dynamic real-world environments.
 
-## ⚡ Quick Start (2 Minutes)
+## Core Capabilities
 
-### System Requirements
+### Intelligent Inventory Management
 
-- Python 3.13+
-- Node.js 18+
-- Git (optional, for cloning)
+Centralized product tracking across operational inventory layers with:
 
-### Get It Running
+- Product lifecycle visibility
+- Stock-level monitoring
+- Historical inventory state analysis
+- Soft-delete archival controls
 
-**Terminal 1 - Backend:**
+### Transaction Intelligence
+
+Track and analyze all operational movement:
+
+- Purchase records
+- Sales records
+- Historical transaction patterns
+- Product-specific movement analysis
+- Temporal trend analysis
+
+### Predictive Demand Forecasting
+
+Forecast future product demand using statistical models including:
+
+- Prophet forecasting
+- ARIMA forecasting
+- Confidence interval estimation
+- Forecast accuracy monitoring (MAPE scoring)
+- Seasonal demand pattern recognition
+
+This enables proactive planning instead of reactive correction.
+
+### Inventory Optimization Engine
+
+Automatically recommends ideal stock levels using adaptive inventory logic based on:
+
+- Historical demand behavior
+- Supply lead-time assumptions
+- Safety stock calculations
+- Demand variability buffers
+
+Recommendation workflow:
+
+- Pending → Approved → Implemented
+
+### Decision Intelligence Dashboard
+
+Operational insights surfaced visually through:
+
+- Product performance metrics
+- Inventory status visibility
+- Forecast trends
+- Recommendation status tracking
+- Forecast confidence visualization
+
+Built for fast executive interpretation.
+
+## Production Architecture
+
+AgricStat is structured as a modern modular full-stack platform.
+
+### Backend Infrastructure
+
+- Framework: FastAPI
+- Language: Python 3.13
+- Database: PostgreSQL
+- ORM: SQLAlchemy 2.0
+- Forecasting Engine: Prophet + StatsModels ARIMA
+- API Documentation: OpenAPI / Swagger
+- Server Runtime: Uvicorn ASGI
+
+Core backend responsibilities:
+
+- Business logic orchestration
+- Forecast generation
+- Inventory recommendation processing
+- Data validation
+- API exposure
+- Persistence control
+
+### Frontend Platform
+
+- Framework: React 18
+- Build System: Vite
+- Routing: React Router
+- HTTP Layer: Axios
+- Styling: Modular CSS Architecture
+
+Capabilities:
+
+- Responsive multi-device UI
+- Operational dashboards
+- Data-entry workflows
+- Forecast visualization
+- Recommendation approval pipelines
+
+### Mobile Layer
+
+- Framework: Flutter
+
+Mobile parity includes:
+
+- Product access
+- Transaction management
+- Forecast visibility
+- Inventory recommendation workflows
+- Field-operational accessibility
+
+Designed for mobile-first agricultural environments.
+
+## Platform Structure
+
+```
+agric-stat/
+
+backend/
+    app/
+        routes/
+        models/
+        services/
+        core/
+        main.py
+
+frontend/
+    src/
+        pages/
+        components/
+        services/
+        styles/
+
+mobile/
+    lib/
+        screens/
+        widgets/
+        services/
+        models/
+
+docs/
+    API.md
+    ARCHITECTURE.md
+```
+
+## Technical Quality Standards
+
+AgricStat follows production engineering discipline:
+
+- Modular service separation
+- Test-driven backend validation
+- Environment configuration isolation
+- Relative-path documentation portability
+- Clean deployment readiness
+- Structured API contracts
+- Scalable maintainability patterns
+
+## Testing Coverage
+
+Backend validation suite includes:
+
+- API route testing
+- Forecast service testing
+- Database integration validation
+- Business-rule enforcement tests
+- Data consistency assurance
+
+Run tests:
+
+```bash
+pytest tests/ -v
+```
+
+Coverage mode:
+
+```bash
+pytest tests/ --cov=app
+```
+
+## Local Deployment
+
+### Backend:
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate        # (venv\Scripts\activate on Windows)
+source venv/bin/activate
 pip install -r requirements.txt
 python init_db.py
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-**Terminal 2 - Frontend:**
+### Frontend:
 
 ```bash
 cd frontend
@@ -48,255 +218,63 @@ npm install
 npm run dev
 ```
 
-**Then open:** http://localhost:3001
-
-✅ **That's it! App is running.**
-
-### Need Detailed Help?
-
-👉 **[Complete Setup Guide for Windows/macOS/Linux](GET_STARTED.md)**
-
-```
-agric-stat-dash/
-├── backend/                    # FastAPI REST API (Python)
-│   ├── app/
-│   │   ├── routes/            # API endpoint handlers
-│   │   ├── models/            # SQLAlchemy ORM models (User, Product, Transaction, Forecast, Recommendation)
-│   │   ├── services/          # Business logic (forecasting, inventory optimization)
-│   │   ├── core/              # Configuration and database settings
-│   │   └── main.py            # FastAPI application entry point
-│   ├── tests/                 # pytest test suite (55+ tests)
-│   ├── requirements.txt       # Python package dependencies
-│   └── README.md              # Backend-specific documentation
-├── frontend/                  # React + Vite web application
-│   ├── src/
-│   │   ├── pages/            # Dashboard pages (5 pages)
-│   │   │   ├── Dashboard.jsx  # Main dashboard with stats
-│   │   │   ├── Products.jsx   # Product management
-│   │   │   ├── Transactions.jsx
-│   │   │   ├── Forecasts.jsx
-│   │   │   └── Recommendations.jsx
-│   │   ├── components/        # Reusable React components (8+)
-│   │   ├── services/          # API client (api.js with Axios)
-│   │   └── styles/            # CSS stylesheets
-│   ├── package.json          # npm dependencies
-│   ├── vite.config.js        # Vite bundler configuration
-│   └── README.md              # Frontend-specific documentation
-├── mobile/                    # Flutter mobile application
-│   ├── lib/
-│   │   ├── screens/          # Mobile screens (5 screens matching web)
-│   │   ├── widgets/          # Reusable Flutter widgets
-│   │   ├── models/           # Data models with JSON serialization
-│   │   ├── services/         # Dio API client
-│   │   └── main.dart         # App entry point
-│   ├── pubspec.yaml          # Flutter package dependencies
-│   └── README.md              # Mobile-specific documentation
-├── docs/                      # Project documentation
-│   ├── API.md                # REST API endpoint reference
-│   └── ARCHITECTURE.md       # System architecture
-├── .gitignore                # Git ignore configuration
-├── .env.example              # Example environment variables
-├── RUN_LOCALLY.md            # Complete local setup guide ⭐ START HERE
-├── QUICK_START.md            # Quick reference for starting servers
-├── SYSTEM_STATUS.md          # Current system status overview
-└── README.md                 # This file
-```
-
----
+### Application Access:
 
-## 🚀 Quick Start (3 Steps)
+**Frontend:**
 
-> ⭐ **For detailed setup**: See [RUN_LOCALLY.md](RUN_LOCALLY.md)
+http://localhost:5173
 
-### Prerequisites
+**Backend API Docs:**
 
-```bash
-python --version      # 3.13+
-node --version       # 18+
-npm --version        # 9+
-```
+http://localhost:8000/docs
 
-### Step 1: Backend (Terminal 1)
+## Strategic Use Cases
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
-```
+AgricStat is designed for:
 
-✅ Backend running: http://localhost:8000/docs
+- **Agricultural Cooperatives** - Shared forecasting and inventory planning
+- **Regional Distributors** - Demand visibility across distribution points
+- **Retail Agricultural Networks** - Sales intelligence and stock optimization
+- **Supply Coordination Hubs** - Cross-actor inventory synchronization
+- **Agricultural Data Modernization Projects** - Digital agricultural intelligence infrastructure
 
-### Step 2: Frontend (Terminal 2)
+## Future Infrastructure Evolution
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Planned expansion includes:
 
-✅ Frontend running: http://localhost:5173
+- Multi-tenant cooperative environments
+- Advanced forecasting ensembles
+- PDF and CSV reporting exports
+- Role-based authorization systems
+- Real-time event notifications
+- Collaborative operational planning
+- Historical anomaly detection
 
-### Step 3: Open App
+### Potential Decentralized Extensions
 
-Open http://localhost:5173 in your browser
+AgricStat is intentionally architected to support future decentralized trust integrations such as:
 
----
+- Verifiable inventory event anchoring
+- Cooperative transaction immutability
+- Supply chain audit proofs
+- Tamper-resistant historical forecasting logs
+- Agricultural credit reputation layers
 
-## 📚 Documentation
+This creates strong interoperability potential with decentralized infrastructure ecosystems such as Cardano.
 
-| Document                             | For                                       |
-| ------------------------------------ | ----------------------------------------- |
-| **[GET_STARTED.md](GET_STARTED.md)** | Complete setup guide with troubleshooting |
-| **[README.md](README.md)**           | This file - Project overview              |
+## Project Origin
 
----
+Developed as advanced applied software engineering research through [University of Eastern Africa, Baraton](https://ueab.ac.ke) (INSY 492 Senior Project, 2026)
 
-## 🔧 Development
+AgricStat reflects production-focused engineering designed for practical deployment beyond academic demonstration.
 
-### Run Tests
+## Vision
 
-```bash
-cd backend
-pytest tests/ -v              # All tests
-pytest tests/ --cov=app      # With coverage report
-```
+Agricultural modernization requires more than digitization.
 
-### API Documentation
+It requires decision intelligence infrastructure that makes fragmented systems more predictable, efficient, and resilient.
 
-When backend is running: http://localhost:8000/docs (Swagger UI)
-
-### Project Commands
-
-```bash
-# Backend
-cd backend && PYTHONPATH=. python -m uvicorn app.main:app --reload --port 8000
-
-# Frontend
-cd frontend && npm install && npm run dev
-
-# Tests
-cd backend && pytest tests/ -v
-```
-
----
-
-## 🌐 API Endpoints
-
-### Products
-
-- `GET /api/products` - List products
-- `POST /api/products` - Create product
-- `GET /api/products/{id}` - Get details
-- `PUT /api/products/{id}` - Update
-- `DELETE /api/products/{id}` - Delete
-
-### Transactions
-
-- `GET /api/transactions` - List transactions
-- `POST /api/transactions` - Record transaction
-
-### Forecasts
-
-- `GET /api/forecasts` - List forecasts
-- `POST /api/forecasts` - Create forecast
-
-### Recommendations
-
-- `GET /api/recommendations` - List recommendations
-- `PUT /api/recommendations/{id}/approve` - Approve
-
-**Full docs**: http://localhost:8000/docs
-
----
-
-## 🐛 Troubleshooting
-
-See detailed troubleshooting guide in [RUN_LOCALLY.md](RUN_LOCALLY.md)
-
-**Quick fixes**:
-
-```bash
-# Port 8000 in use
-lsof -i :8000 && kill -9 <PID>
-
-# npm issues
-npm cache clean --force && npm install
-
-# Python imports
-export PYTHONPATH=./backend
-```
-
----
-
-## 🚢 Deployment
-
-See each component's README:
-
-- [backend/README.md](backend/README.md) - Backend deployment
-- [frontend/README.md](frontend/README.md) - Frontend deployment
-- [mobile/README.md](mobile/README.md) - Mobile deployment
-
----
-
-## 📝 Git & GitHub Notes
-
-### Use Relative Paths in Documentation
-
-✅ **DO**:
-
-```markdown
-cd backend # Relative path
-npm install # Uses current directory
-```
-
-❌ **DON'T**:
-
-```markdown
-cd /home/user/projects/agric-stat-dash/backend # Absolute path - breaks for others
-```
-
-### Never Commit
-
-```
-.env                # Secrets
-venv/ node_modules/ # Dependencies
-__pycache__/        # Python cache
-.DS_Store dist/     # OS files & builds
-```
-
-### Environment Setup
-
-```bash
-# Create from template
-cp .env.example .env
-# Edit with your values
-nano .env
-```
-
----
-
-## 📋 Checklist Before Pushing
-
-- [ ] Used relative paths in all documentation
-- [ ] Run tests: `cd backend && pytest tests/ -v`
-- [ ] Check `.gitignore` excludes sensitive files
-- [ ] `.env` file NOT committed (use `.env.example`)
-- [ ] `node_modules/`, `venv/` NOT committed
-- [ ] README points to [RUN_LOCALLY.md](RUN_LOCALLY.md)
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/name`
-3. Make changes & test: `pytest tests/ -v`
-4. Use relative paths in docs
-5. Commit: `git commit -m "feat: description"`
-6. Push: `git push origin feature/name`
-7. Create Pull Request
+AgricStat exists to provide that operational intelligence layer.
 
 ---
 
