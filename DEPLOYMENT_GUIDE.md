@@ -1,7 +1,9 @@
 # 🎯 AgricStat - Live Demo Deployment Summary
 
 ## The Challenge
+
 You have a full-stack agricultural analytics platform with:
+
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + Vite
 - **Database**: PostgreSQL
@@ -14,14 +16,15 @@ You need **free hosting** that supports everything.
 ## ✨ The Solution: Render + Vercel
 
 ### Why This Combo?
-| Feature | Render | Vercel |
-|---------|--------|--------|
-| **FastAPI Support** | ✅ | ❌ |
-| **PostgreSQL** | ✅ Free | ❌ |
-| **React Hosting** | ❌ | ✅ Excellent |
-| **Free Tier** | ✅ 512MB RAM | ✅ Unlimited |
-| **Auto-Deploy** | ✅ GitHub | ✅ GitHub |
-| **Cost** | Free | Free |
+
+| Feature             | Render       | Vercel       |
+| ------------------- | ------------ | ------------ |
+| **FastAPI Support** | ✅           | ❌           |
+| **PostgreSQL**      | ✅ Free      | ❌           |
+| **React Hosting**   | ❌           | ✅ Excellent |
+| **Free Tier**       | ✅ 512MB RAM | ✅ Unlimited |
+| **Auto-Deploy**     | ✅ GitHub    | ✅ GitHub    |
+| **Cost**            | Free         | Free         |
 
 ---
 
@@ -77,10 +80,13 @@ Time: 30 min   → ✅ Live demo is ready!
 ## 💻 3 Step Deployment
 
 ### Step 1️⃣: Prepare Repository
+
 ```bash
 git push origin main
 ```
+
 Ensure your GitHub repo has:
+
 - ✅ `.env.example`
 - ✅ `backend/requirements.txt`
 - ✅ `frontend/package.json`
@@ -92,11 +98,13 @@ Ensure your GitHub repo has:
 ### Step 2️⃣: Deploy to Render
 
 **Create PostgreSQL**
+
 1. Visit render.com
 2. **New** → **PostgreSQL**
 3. Save Internal URL
 
 **Create Web Service**
+
 1. **New** → **Web Service**
 2. Select GitHub repo
 3. Settings:
@@ -109,6 +117,7 @@ Ensure your GitHub repo has:
 5. Deploy ⏳
 
 **Seed Database**
+
 ```bash
 curl -X POST https://YOUR_BACKEND/api/seed-database
 ```
@@ -118,6 +127,7 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 ### Step 3️⃣: Deploy to Vercel
 
 **Import Project**
+
 1. Visit vercel.com
 2. Import GitHub repo
 3. Settings:
@@ -167,15 +177,16 @@ Products:    20 items (Tomatoes, Maize, Beans, etc.)
 
 ## 🎁 Free Tier Details
 
-| Resource | Limit | What It Means |
-|----------|-------|---------------|
-| **Render Backend** | 512 MB, 0.5 CPU | Runs your FastAPI server |
-| **PostgreSQL DB** | 256 MB, 90 days | Stores all your data |
-| **Vercel Frontend** | Unlimited | Blazing fast React hosting |
-| **Bandwidth** | 100 GB/month | Plenty for a demo |
-| **Auto-Deploy** | Unlimited | Push to GitHub = auto-deploy |
+| Resource            | Limit           | What It Means                |
+| ------------------- | --------------- | ---------------------------- |
+| **Render Backend**  | 512 MB, 0.5 CPU | Runs your FastAPI server     |
+| **PostgreSQL DB**   | 256 MB, 90 days | Stores all your data         |
+| **Vercel Frontend** | Unlimited       | Blazing fast React hosting   |
+| **Bandwidth**       | 100 GB/month    | Plenty for a demo            |
+| **Auto-Deploy**     | Unlimited       | Push to GitHub = auto-deploy |
 
 ### ⚠️ Important Notes
+
 - **Render free tier spins down** after 15 min of inactivity (restart takes ~5 sec)
 - **PostgreSQL resets every 90 days** (backup data if needed)
 - **Upgrade anytime** to Paid ($7/month) for persistent backend
@@ -185,6 +196,7 @@ Products:    20 items (Tomatoes, Maize, Beans, etc.)
 ## 🔑 Environment Variables
 
 ### Backend (Render)
+
 ```env
 DATABASE_URL=postgresql://[user]:[password]@[host]/agric_stat_db
 DEBUG=false
@@ -193,6 +205,7 @@ ALLOWED_ORIGINS=https://agric-stat.vercel.app
 ```
 
 ### Frontend (Vercel)
+
 ```env
 VITE_API_URL=https://agric-stat-backend.render.com
 ```
@@ -222,13 +235,13 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 
 ## 🆘 Common Issues & Fixes
 
-| Problem | Solution |
-|---------|----------|
+| Problem             | Solution                                        |
+| ------------------- | ----------------------------------------------- |
 | **502 Bad Gateway** | Backend is spinning up or crashed - wait 30 sec |
-| **CORS Error** | Add Vercel URL to `ALLOWED_ORIGINS` in Render |
-| **Can't login** | Run `/api/seed-database` to initialize DB |
-| **No sample data** | Manually call seed endpoint or use Render CLI |
-| **Blank dashboard** | Check browser console (F12) for API errors |
+| **CORS Error**      | Add Vercel URL to `ALLOWED_ORIGINS` in Render   |
+| **Can't login**     | Run `/api/seed-database` to initialize DB       |
+| **No sample data**  | Manually call seed endpoint or use Render CLI   |
+| **Blank dashboard** | Check browser console (F12) for API errors      |
 
 ---
 
@@ -246,6 +259,7 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 ## 📚 Next Steps After Deployment
 
 ### For Production (Optional)
+
 - [ ] Upgrade Render to **Standard** ($7/month) for always-on backend
 - [ ] Enable **database backups** in Render
 - [ ] Add **SSL/TLS** certificate (auto-included)
@@ -254,12 +268,14 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 - [ ] Configure **email notifications**
 
 ### For Testing
+
 - [ ] Share demo URL with stakeholders
 - [ ] Get feedback on UI/UX
 - [ ] Test forecasting accuracy
 - [ ] Load test with more data
 
 ### For Development
+
 - [ ] Add **real authentication** (OAuth, JWT)
 - [ ] Implement **user roles** (Admin, Farmer, Distributor)
 - [ ] Add **PDF export** for reports
@@ -270,6 +286,7 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 ## 🎉 You're Ready!
 
 Your AgricStat live demo is now:
+
 - ✅ Deployed on **Render** (Backend + Database)
 - ✅ Hosted on **Vercel** (Frontend)
 - ✅ Loaded with **sample data** (20 products, 60 forecasts, etc.)
@@ -278,6 +295,7 @@ Your AgricStat live demo is now:
 - ✅ **Production-grade** (SSL, CDN, monitoring)
 
 ### Share Your Demo
+
 ```
 Frontend: https://agric-stat.vercel.app
 Backend API: https://agric-stat-backend.render.com
@@ -285,6 +303,7 @@ API Documentation: https://agric-stat-backend.render.com/docs
 ```
 
 **Login with:**
+
 ```
 Username: admin@agri
 Password: 1234
@@ -295,6 +314,7 @@ Password: 1234
 ## 📞 Support
 
 Need help? Check these resources:
+
 - [Render Documentation](https://render.com/docs)
 - [Vercel Documentation](https://vercel.com/docs)
 - [FastAPI Deployment Guide](https://fastapi.tiangolo.com/deployment/)

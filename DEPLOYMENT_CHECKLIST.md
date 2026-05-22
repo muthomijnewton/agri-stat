@@ -14,6 +14,7 @@
 ## 📍 Render.com Deployment (Backend + Database)
 
 ### Create PostgreSQL Database
+
 - [ ] Go to render.com and sign in
 - [ ] Click **New +** → **PostgreSQL**
 - [ ] Name: `agric-stat-db`
@@ -23,6 +24,7 @@
 - [ ] **Copy Internal Database URL** and save it
 
 ### Create Web Service
+
 - [ ] Click **New +** → **Web Service**
 - [ ] Select your GitHub repository
 - [ ] Fill in details:
@@ -40,6 +42,7 @@
 - [ ] **Note your Backend URL**: `https://agric-stat-backend-xxxxx.render.com`
 
 ### Initialize Database
+
 - [ ] Option A: Wait 5 min, then visit: `https://YOUR_BACKEND_URL/docs`
   - [ ] Find `/api/seed-database` endpoint
   - [ ] Click "Try it out" → "Execute"
@@ -54,12 +57,14 @@
 ## 🎨 Vercel Deployment (Frontend)
 
 ### Import Project
+
 - [ ] Go to vercel.com and sign in
 - [ ] Click **Add New** → **Project**
 - [ ] Import your GitHub repository
 - [ ] Select and import the repo
 
 ### Configure Build
+
 - [ ] Framework: `Vite`
 - [ ] Root Directory: `frontend`
 - [ ] Build Command: `npm run build`
@@ -67,6 +72,7 @@
 - [ ] Output Directory: `dist`
 
 ### Environment Variables
+
 - [ ] Click **Environment Variables**
 - [ ] Add: `VITE_API_URL` = `https://YOUR_BACKEND_URL`
   - [ ] Replace `YOUR_BACKEND_URL` with Render backend URL
@@ -92,12 +98,14 @@
 ## 🧪 Test Live Deployment
 
 ### Test Backend
+
 - [ ] Visit: `https://YOUR_BACKEND_URL/docs`
 - [ ] See Swagger UI
 - [ ] Try GET `/api/products` - should return 20 products
 - [ ] Try GET `/api/forecasts` - should return 60 forecasts
 
 ### Test Frontend
+
 - [ ] Visit: `https://YOUR_FRONTEND_URL`
 - [ ] Login with `admin@agri` / `1234`
 - [ ] Check Dashboard - should show stats and charts
@@ -105,6 +113,7 @@
 - [ ] Navigate to Recommendations - should show 10 records
 
 ### Test Data Verification
+
 - [ ] Dashboard Stats:
   - [ ] Total Products: 20
   - [ ] Transactions: 225
@@ -125,14 +134,14 @@
 
 ## 🆘 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Backend won't start | Check `requirements.txt`, ensure Python 3.11+ |
-| DB connection error | Verify `DATABASE_URL` env var in Render |
-| Frontend shows 404 | Check `VITE_API_URL` environment variable |
-| CORS error in browser | Add frontend URL to backend `ALLOWED_ORIGINS` |
-| No sample data | Visit `/api/seed-database` endpoint to initialize |
-| Render spins down | Restart service or use Paid Tier |
+| Issue                 | Solution                                          |
+| --------------------- | ------------------------------------------------- |
+| Backend won't start   | Check `requirements.txt`, ensure Python 3.11+     |
+| DB connection error   | Verify `DATABASE_URL` env var in Render           |
+| Frontend shows 404    | Check `VITE_API_URL` environment variable         |
+| CORS error in browser | Add frontend URL to backend `ALLOWED_ORIGINS`     |
+| No sample data        | Visit `/api/seed-database` endpoint to initialize |
+| Render spins down     | Restart service or use Paid Tier                  |
 
 ---
 
@@ -148,6 +157,7 @@
 ## 🎉 You're Done!
 
 Your AgricStat demo is live with:
+
 - ✅ FastAPI backend on Render
 - ✅ React frontend on Vercel
 - ✅ PostgreSQL database with sample data
@@ -161,6 +171,7 @@ Your AgricStat demo is live with:
 ## 📈 Next Steps
 
 For production deployment:
+
 - Upgrade to Render **Paid Plan** ($7/month) for always-on backend
 - Add **authentication** with JWT tokens
 - Set up **environment-specific configs**

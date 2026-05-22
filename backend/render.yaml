@@ -13,7 +13,7 @@ services:
         fromDatabase:
           name: agric-stat-db
           property: connectionString
-  
+
   - type: pserv
     name: agric-stat-db
     plan: free
