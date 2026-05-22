@@ -1,4 +1,5 @@
 # 🌾 AgricStat
+
 Agricultural Intelligence & Forecasting Infrastructure for Cooperative-Scale Decision Making
 
 AgricStat is a production-grade agricultural analytics platform built to help farms, cooperatives, distributors, and agricultural retailers optimize inventory, forecast product demand, reduce waste, and improve operational decision-making through intelligent statistical modeling.
