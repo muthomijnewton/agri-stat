@@ -1,6 +1,7 @@
 # 🔧 Render Deployment Fix - statsmodels Build Error
 
 ## ❌ Problem
+
 ```
 ERROR: Failed to build 'statsmodels' when getting requirements to build wheel
 ```
@@ -22,7 +23,7 @@ I've created a **lightweight deployment configuration** that removes heavy ML de
    - Use for: `pip install -r requirements.txt` (locally)
 
 2. **`requirements-render.txt`** - Lightweight production (for Render deployment)
-   - Excludes: Prophet, Statsmodels  
+   - Excludes: Prophet, Statsmodels
    - Use for: Rendering on Render.com
    - Includes: All core API features, database, FastAPI
 
@@ -82,6 +83,7 @@ curl -X POST https://YOUR_BACKEND_URL/api/auth/seed-database
 ```
 
 You should see:
+
 - ✅ Swagger UI loads
 - ✅ 20 products returned
 - ✅ Database seeded with sample data
@@ -91,6 +93,7 @@ You should see:
 ## 📊 Dashboard Still Shows Forecasts!
 
 Even without Prophet:
+
 - ✅ Displays sample forecast data from database
 - ✅ Charts render with historical forecasts
 - ✅ Users can view recommendations
@@ -105,16 +108,20 @@ It just won't **generate new** forecasts in real-time.
 To add forecasting back:
 
 ### Option A: Use Railway.app (Better for ML)
+
 Railway has better build environment for ML libraries:
+
 ```bash
 # Railway automatically detects requirements.txt
 # Just push code and it deploys with all ML features
 ```
 
 ### Option B: Upgrade Render Plan
+
 Paid Render plans have better build environment for compiling statsmodels.
 
 ### Option C: Pre-compute Forecasts
+
 Run forecasts locally, store in database, display on frontend (what you're already doing!).
 
 ---
@@ -150,11 +157,11 @@ backend/
 
 ## 🎯 Quick Summary
 
-| Environment | Requirements | Features | Status |
-|------------|--------------|----------|--------|
-| **Local** | `requirements.txt` | Full forecasting | ✅ Works |
-| **Render** | `requirements-render.txt` | Core API + stored data | ✅ Fixed |
-| **Vercel** | `package.json` (frontend) | React UI | ✅ Works |
+| Environment | Requirements              | Features               | Status   |
+| ----------- | ------------------------- | ---------------------- | -------- |
+| **Local**   | `requirements.txt`        | Full forecasting       | ✅ Works |
+| **Render**  | `requirements-render.txt` | Core API + stored data | ✅ Fixed |
+| **Vercel**  | `package.json` (frontend) | React UI               | ✅ Works |
 
 ---
 
@@ -169,11 +176,12 @@ If build still fails after updating:
    - Should be 3.11+ automatically
 
 3. **Verify file path**:
+
    ```
    pip install -r backend/requirements-render.txt
    ✅ Correct
-   
-   pip install -r requirements-render.txt  
+
+   pip install -r requirements-render.txt
    ❌ Wrong (must include backend/ prefix)
    ```
 
