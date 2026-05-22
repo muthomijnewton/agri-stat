@@ -1,0 +1,17 @@
+backend
+mobile
+docs
+README.md
+GET_STARTED.md
+requirements.txt
+requirements-base.txt
+init_db.py
+quickstart.sh
+run_backend.sh
+run_frontend.sh
+setup_db.sh
+start_backend.sh
+start_frontend.sh
+.env
+.env.example
+*.md
