@@ -9,14 +9,14 @@ class RecommendationCard extends StatelessWidget {
   final VoidCallback? onImplement;
 
   const RecommendationCard({
-    Key? key,
+    super.key,
     required this.id,
     required this.productName,
     required this.recommendedQuantity,
     required this.status,
     this.onApprove,
     this.onImplement,
-  }) : super(key: key);
+  });
 
   Color _getStatusColor() {
     switch (status) {
@@ -68,7 +68,7 @@ class RecommendationCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor().withOpacity(0.2),
+                      color: _getStatusColor().withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

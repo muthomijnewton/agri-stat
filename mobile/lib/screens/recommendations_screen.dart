@@ -3,7 +3,7 @@ import '../services/api_service.dart';
 import '../widgets/recommendation_card.dart';
 
 class RecommendationsScreen extends StatefulWidget {
-  const RecommendationsScreen({Key? key}) : super(key: key);
+  const RecommendationsScreen({super.key});
 
   @override
   State<RecommendationsScreen> createState() => _RecommendationsScreenState();

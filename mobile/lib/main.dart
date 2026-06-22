@@ -10,7 +10,7 @@ void main() {
 }
 
 class AgriculturalStatApp extends StatelessWidget {
-  const AgriculturalStatApp({Key? key}) : super(key: key);
+  const AgriculturalStatApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class AgriculturalStatApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

@@ -3,7 +3,7 @@ import '../services/api_service.dart';
 import '../widgets/stat_card.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -29,7 +29,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final forecasts = await _apiService.getForecasts();
       final recommendations = await _apiService.getRecommendations();
 
-      final pendingRecs = (recommendations as List)
+      final pendingRecs = (recommendations)
           .where((r) => r['status'] == 'pending')
           .length;
 

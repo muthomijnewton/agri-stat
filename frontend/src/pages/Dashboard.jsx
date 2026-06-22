@@ -224,6 +224,14 @@ function Dashboard() {
       <button onClick={fetchDashboardData} className="refresh-btn">
         🔄 Refresh Data
       </button>
+
+      <div className="download-section" style={{ marginTop: '30px' }}>
+        <h2>Install Mobile App</h2>
+        <p>Download the Android installer and open it on your phone.</p>
+        <a href="http://10.50.1.121:8000/downloads/apk" className="download-btn" style={{ display: 'inline-block', padding: '12px 24px', backgroundColor: '#2a9d8f', color: '#fff', borderRadius: '8px', textDecoration: 'none' }}>
+          Download Android APK
+        </a>
+      </div>
     </div>
   )
 }

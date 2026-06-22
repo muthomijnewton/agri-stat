@@ -8,13 +8,13 @@ class ProductCard extends StatelessWidget {
   final String? unit;
 
   const ProductCard({
-    Key? key,
+    super.key,
     required this.id,
     required this.name,
     this.category,
     this.price,
     this.unit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class ProductCard extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: const Color(0xFF2E7D32).withOpacity(0.2),
+            color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(Icons.agriculture, color: Color(0xFF2E7D32)),

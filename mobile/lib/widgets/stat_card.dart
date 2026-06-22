@@ -8,12 +8,12 @@ class StatCard extends StatelessWidget {
   final Color backgroundColor;
 
   const StatCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.icon,
     this.backgroundColor = const Color(0xFF2E7D32),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class StatCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [backgroundColor, backgroundColor.withOpacity(0.7)],
+            colors: [backgroundColor, backgroundColor.withValues(alpha: 0.7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

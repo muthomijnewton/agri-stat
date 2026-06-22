@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
 class ForecastsScreen extends StatefulWidget {
-  const ForecastsScreen({Key? key}) : super(key: key);
+  const ForecastsScreen({super.key});
 
   @override
   State<ForecastsScreen> createState() => _ForecastsScreenState();
@@ -74,7 +74,7 @@ class _ForecastsScreenState extends State<ForecastsScreen> {
                       if (forecast['model_type'] != null)
                         Chip(
                           label: Text(forecast['model_type']),
-                          backgroundColor: const Color(0xFF2E7D32).withOpacity(0.2),
+                          backgroundColor: const Color(0xFF2E7D32).withValues(alpha: 0.2),
                         ),
                     ],
                   ),
