@@ -14,13 +14,15 @@ router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 @router.get("/summary")
 def get_transaction_summary(db: Session = Depends(get_db)):
-    """Get summarized transaction totals by category"""
+    """Get summarized transaction totals by product category"""
+    # We join Transaction to Product to access the 'category' column
     results = db.query(
-        Transaction.category, 
-        func.sum(Transaction.amount).label("total_amount")
-    ).group_by(Transaction.category).all()
+        Product.category, 
+        func.sum(Transaction.total_price).label("total_amount")
+    ).join(Product, Transaction.product_id == Product.id) \
+     .group_by(Product.category).all()
     
-    return [{"category": r.category, "total": r.total_amount} for r in results]
+    return [{"category": r.category, "total": float(r.total_amount)} for r in results]
 
 @router.get("/", response_model=List[TransactionResponse])
 def list_transactions(
