@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 
 class ApiService {
- static const String baseUrl = 'http://10.50.1.121:8000/api';
+  static const String baseUrl = 'https://agric-stat-dash-1.onrender.com/api';
   
   late Dio _dio;
   final logger = Logger();
