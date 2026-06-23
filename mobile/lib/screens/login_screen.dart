@@ -33,9 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           // <-- Save the user data to secure storage before navigating away
           await _authService.saveUserSession(
-            response['id'].toString(),
-            response['username'].toString(),
-          );
+  response['id'].toString(),
+  response['username'].toString(),
+  response['access_token'] ?? '',
+);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Welcome back, ${response['username']}!')),

@@ -35,16 +35,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading transactions: $e')),
+          SnackBar(
+            content: Text('Error loading transactions: $e'),
+          ),
         );
       }
     }
   }
 
+  /// ================= SAFE HELPERS =================
+
+  double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
   String _formatMoney(dynamic value) {
-    if (value == null) return "0";
-    final numVal = (value as num).toDouble();
-    return numVal.toStringAsFixed(0);
+    return _toDouble(value).toStringAsFixed(0);
+  }
+
+  String _formatQuantity(dynamic value) {
+    return _toDouble(value).toStringAsFixed(0);
   }
 
   @override
@@ -70,22 +82,34 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         padding: const EdgeInsets.all(12),
         itemCount: _transactions.length,
         itemBuilder: (context, index) {
-          final transaction = _transactions[index] ?? {};
+          final transaction =
+              (_transactions[index] as Map<String, dynamic>? ?? {});
 
-          final productId = transaction['product_id'] ?? 'Unknown';
-          final quantity = transaction['quantity'] ?? 0;
-          final date = transaction['transaction_date'] ?? 'No date';
-          final totalPrice = transaction['total_price'];
+          final productId =
+              transaction['product_id']?.toString() ?? 'Unknown';
+
+          final quantity =
+              _formatQuantity(transaction['quantity']);
+
+          final date =
+              transaction['transaction_date']?.toString() ?? 'No date';
+
+          final totalPrice =
+              _formatMoney(transaction['total_price']);
 
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
+            margin: const EdgeInsets.symmetric(
+              vertical: 8,
+            ),
             elevation: 2,
             child: ListTile(
               leading: Container(
                 width: 45,
                 height: 45,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2E7D32).withValues(alpha: 0.15),
+                  color: const Color(
+                    0xFF2E7D32,
+                  ).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -102,7 +126,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ),
 
               subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(
+                  top: 4,
+                ),
                 child: Text(
                   'Quantity: $quantity\nDate: $date',
                   style: TextStyle(
@@ -113,17 +139,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ),
 
               trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+
+                crossAxisAlignment:
+                    CrossAxisAlignment.end,
+
                 children: [
                   Text(
-                    'KSH ${_formatMoney(totalPrice)}',
+                    'KSH $totalPrice',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2E7D32),
                     ),
                   ),
+
                   const SizedBox(height: 4),
+
                   const Icon(
                     Icons.arrow_forward_ios,
                     size: 14,

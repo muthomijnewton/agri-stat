@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
+import '../utils/type_safety.dart';
 
 class ApiService {
-  // KEEP /api because your backend uses prefix="/api"
   static const String baseUrl =
       'https://agric-stat-dash-1.onrender.com/api';
 
@@ -30,28 +30,27 @@ class ApiService {
   // ==========================
 
   Future<Map<String, dynamic>> login(
-  String username,
-  String password,
-) async {
-  try {
-    final response = await _dio.post(
-      '/auth/login',
-      data: {
-        'username': username,
-        'password': password,
-      },
-      options: Options(
-        contentType: Headers.jsonContentType,
-      ),
-    );
+    String username,
+    String password,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {
+          'username': username,
+          'password': password,
+        },
+        options: Options(
+          contentType: Headers.jsonContentType,
+        ),
+      );
 
-    return Map<String, dynamic>.from(response.data);
-  } on DioException catch (e) {
-    logger.e('Login failed with status ${e.response?.statusCode}');
-    logger.e('Login response: ${e.response?.data}');
-    rethrow;
+      return Map<String, dynamic>.from(response.data);
+    } on DioException catch (e) {
+      logger.e('Login failed: ${e.response?.data}');
+      rethrow;
+    }
   }
-}
 
   // ==========================
   // PRODUCTS
@@ -64,15 +63,14 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/products/',
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-        },
+        queryParameters: {'skip': skip, 'limit': limit},
       );
-      return response.data;
+
+      final data = response.data;
+      return data is List ? data : [];
     } catch (e) {
       logger.e('Error fetching products: $e');
-      rethrow;
+      return [];
     }
   }
 
@@ -82,7 +80,7 @@ class ApiService {
       return response.data;
     } catch (e) {
       logger.e('Error fetching product: $e');
-      rethrow;
+      return null;
     }
   }
 
@@ -92,7 +90,7 @@ class ApiService {
       return response.data;
     } catch (e) {
       logger.e('Error creating product: $e');
-      rethrow;
+      return null;
     }
   }
 
@@ -120,30 +118,28 @@ class ApiService {
             'end_date': endDate.toIso8601String().split('T')[0],
         },
       );
-      return response.data;
+
+      final data = response.data;
+      return data is List ? data : [];
     } catch (e) {
       logger.e('Error fetching transactions: $e');
-      rethrow;
+      return [];
     }
   }
 
-  Future<dynamic> createTransaction(Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.post('/transactions', data: data);
-      return response.data;
-    } catch (e) {
-      logger.e('Error creating transaction: $e');
-      rethrow;
-    }
-  }
+  // ==========================
+  // SUMMARY (IMPORTANT FIXED)
+  // ==========================
 
   Future<List<dynamic>> fetchSummary() async {
     try {
       final response = await _dio.get('/transactions/summary');
-      return response.data;
+
+      final data = response.data;
+      return data is List ? data : [];
     } catch (e) {
       logger.e('Error fetching summary: $e');
-      rethrow;
+      return [];
     }
   }
 
@@ -171,26 +167,27 @@ class ApiService {
             'end_date': endDate.toIso8601String().split('T')[0],
         },
       );
-      return response.data;
+
+      final data = response.data;
+      return data is List ? data : [];
     } catch (e) {
       logger.e('Error fetching forecasts: $e');
-      rethrow;
+      return [];
     }
   }
+  Future<List<dynamic>> getProductForecasts(int productId) async {
+  try {
+    final response = await _dio.get('/forecasts/product/$productId');
 
-  Future<List<dynamic>> getProductForecasts(int productId,
-      {int days = 30}) async {
-    try {
-      final response = await _dio.get(
-        '/forecasts/product/$productId',
-        queryParameters: {'days': days},
-      );
-      return response.data;
-    } catch (e) {
-      logger.e('Error fetching product forecasts: $e');
-      rethrow;
-    }
+    final data = response.data;
+    if (data is List) return data;
+
+    return [];
+  } catch (e) {
+    logger.e('Error fetching product forecasts: $e');
+    rethrow;
   }
+}
 
   // ==========================
   // RECOMMENDATIONS
@@ -212,43 +209,32 @@ class ApiService {
           if (status != null) 'status': status,
         },
       );
-      return response.data;
-    } catch (e) {
-      logger.e('Error fetching recommendations: $e');
-      rethrow;
-    }
-  }
 
-  Future<List<dynamic>> getProductRecommendations(int productId) async {
-    try {
-      final response =
-          await _dio.get('/recommendations/product/$productId');
-      return response.data;
+      final data = response.data;
+      return data is List ? data : [];
     } catch (e) {
       logger.e('Error fetching recommendations: $e');
-      rethrow;
+      return [];
     }
   }
 
   Future<dynamic> approveRecommendation(int id) async {
     try {
-      final response =
-          await _dio.patch('/recommendations/$id/approve');
+      final response = await _dio.patch('/recommendations/$id/approve');
       return response.data;
     } catch (e) {
       logger.e('Error approving recommendation: $e');
-      rethrow;
+      return null;
     }
   }
 
   Future<dynamic> implementRecommendation(int id) async {
     try {
-      final response =
-          await _dio.patch('/recommendations/$id/implement');
+      final response = await _dio.patch('/recommendations/$id/implement');
       return response.data;
     } catch (e) {
       logger.e('Error implementing recommendation: $e');
-      rethrow;
+      return null;
     }
   }
 

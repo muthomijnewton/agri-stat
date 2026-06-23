@@ -18,17 +18,16 @@ dependencies:
   # State Management
   provider: ^6.0.0
 
-  # Navigation
+  # Navigation (optional - currently unused but safe)
   go_router: ^10.0.0
 
   # Data Serialization
-  json_serializable: ^6.7.0
   json_annotation: ^4.8.1
 
   # Local Storage
   shared_preferences: ^2.2.2
   sqflite: ^2.3.0
-  flutter_secure_storage: ^9.0.0 # <--- ADDED THIS LINE
+  flutter_secure_storage: ^9.0.0
 
   # UI/UX
   flutter_spinkit: ^5.2.0
@@ -40,12 +39,14 @@ dependencies:
   connectivity_plus: ^7.1.1
   logger: ^2.0.0
 
+  # 🔔 FUTURE NOTIFICATIONS (ADD NOW FOR NEXT UPGRADE)
+  flutter_local_notifications: ^17.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^3.0.0
-  json_serializable: ^6.7.0
   build_runner: ^2.4.0
 
 flutter:

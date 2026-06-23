@@ -24,6 +24,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     _loadRecommendations();
   }
 
+  int _toInt(dynamic value) {
+    if (value == null) return 0;
+
+    if (value is int) return value;
+
+    if (value is double) return value.toInt();
+
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+
+    return 0;
+  }
+
+  String _toStringValue(dynamic value) {
+    if (value == null) return '';
+
+    return value.toString();
+  }
+
   Future<void> _loadRecommendations() async {
     try {
       setState(() => _isLoading = true);
@@ -31,7 +51,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       final data = await _apiService.getRecommendations();
 
       setState(() {
-        _recommendations = data;
+        _recommendations = (data as List?) ?? [];
         _isLoading = false;
       });
     } catch (e) {
@@ -39,7 +59,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading recommendations: $e')),
+          SnackBar(
+            content: Text(
+              'Error loading recommendations: $e',
+            ),
+          ),
         );
       }
     }
@@ -51,17 +75,27 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
       await _apiService.approveRecommendation(id);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Approved')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Recommendation approved'),
+          ),
+        );
+      }
 
       await _loadRecommendations();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Approve failed: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Approve failed: $e'),
+          ),
+        );
+      }
     } finally {
-      setState(() => _actionLoading = false);
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
     }
   }
 
@@ -71,28 +105,44 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
       await _apiService.implementRecommendation(id);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Implemented')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Recommendation implemented'),
+          ),
+        );
+      }
 
       await _loadRecommendations();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Implement failed: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Implement failed: $e'),
+          ),
+        );
+      }
     } finally {
-      setState(() => _actionLoading = false);
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     if (_recommendations.isEmpty) {
-      return const Center(child: Text('No recommendations found'));
+      return const Center(
+        child: Text(
+          'No recommendations found',
+        ),
+      );
     }
 
     return Stack(
@@ -103,18 +153,36 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             padding: const EdgeInsets.all(12),
             itemCount: _recommendations.length,
             itemBuilder: (context, index) {
-              final rec = _recommendations[index];
+              final rec = _recommendations[index] ?? {};
+
+              final id = _toInt(rec['id']);
+
+              final productId =
+                  _toStringValue(rec['product_id']);
+
+              final quantity =
+                  _toInt(rec['recommended_quantity']);
+
+              final status =
+                  _toStringValue(rec['status']);
 
               return RecommendationCard(
-                id: rec['id'],
-                productName: 'Product ${rec['product_id']}',
-                recommendedQuantity: rec['recommended_quantity'],
-                status: rec['status'] ?? 'pending',
-                onApprove: rec['status'] == 'pending'
-                    ? () => _approve(rec['id'])
+                id: id,
+
+                productName: 'Product $productId',
+
+                recommendedQuantity: quantity,
+
+                status: status.isEmpty
+                    ? 'pending'
+                    : status,
+
+                onApprove: status == 'pending'
+                    ? () => _approve(id)
                     : null,
-                onImplement: rec['status'] == 'approved'
-                    ? () => _implement(rec['id'])
+
+                onImplement: status == 'approved'
+                    ? () => _implement(id)
                     : null,
               );
             },

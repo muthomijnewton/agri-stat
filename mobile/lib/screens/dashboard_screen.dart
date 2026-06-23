@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/summary_chart.dart';
+import '../utils/type_safety.dart'; // 👈 ADD THIS
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -17,13 +18,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Map<String, dynamic> _stats = {};
   List<dynamic> _summaryData = [];
-
-  double _toDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
 
   @override
   void initState() {
@@ -42,17 +36,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final sorted = [...data];
-    sorted.sort((a, b) => _toDouble(b['total']).compareTo(_toDouble(a['total'])));
+
+    sorted.sort((a, b) =>
+        TypeSafety.toDouble(b['total'])
+            .compareTo(TypeSafety.toDouble(a['total'])));
 
     final top = sorted.first;
     final low = sorted.last;
 
     final total = data.fold<double>(
       0,
-      (sum, item) => sum + _toDouble(item['total']),
+      (sum, item) => sum + TypeSafety.toDouble(item['total']),
     );
 
-    final topShare = total == 0 ? 0 : (_toDouble(top['total']) / total) * 100;
+    final topShare = total == 0
+        ? 0
+        : (TypeSafety.toDouble(top['total']) / total) * 100;
 
     String message;
 
@@ -97,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final totalRevenue = transactions.fold<double>(
         0.0,
-        (sum, t) => sum + _toDouble(t['total_price']),
+        (sum, t) => sum + TypeSafety.toDouble(t['total_price']),
       );
 
       final avgTransaction =
@@ -170,7 +169,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               StatCard(
                 title: "Revenue",
-                value: "KSH ${( _stats['totalRevenue'] ?? 0).toStringAsFixed(0)}",
+                value:
+                    "KSH ${(TypeSafety.toDouble(_stats['totalRevenue'])).toStringAsFixed(0)}",
                 icon: Icons.attach_money,
                 backgroundColor: const Color(0xFF6A1B9A),
               ),
@@ -225,25 +225,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
-
                   Text(
                     insights['message'],
                     style: const TextStyle(color: Colors.white),
                   ),
-
                   const SizedBox(height: 12),
-
                   if (insights['top'] != null)
                     Text(
-                      "Top Category: ${insights['top']['category']} (${_toDouble(insights['top']['total']).toStringAsFixed(0)})",
+                      "Top Category: ${insights['top']['category']} "
+                      "(${TypeSafety.toDouble(insights['top']['total']).toStringAsFixed(0)})",
                       style: const TextStyle(color: Colors.white70),
                     ),
-
                   if (insights['low'] != null)
                     Text(
-                      "Lowest Category: ${insights['low']['category']} (${_toDouble(insights['low']['total']).toStringAsFixed(0)})",
+                      "Lowest Category: ${insights['low']['category']} "
+                      "(${TypeSafety.toDouble(insights['low']['total']).toStringAsFixed(0)})",
                       style: const TextStyle(color: Colors.white70),
                     ),
                 ],
@@ -273,9 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
