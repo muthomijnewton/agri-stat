@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
 
-class NotificationsScreen extends StatelessWidget {
-  final NotificationService service;
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
 
-  const NotificationsScreen({
-    super.key,
-    required this.service,
-  });
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
 
-  Color _color(String title) {
-    final t = title.toLowerCase();
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  final NotificationService service = NotificationService();
 
-    if (t.contains("error") || t.contains("fail")) {
-      return Colors.red;
-    } else if (t.contains("warning")) {
-      return Colors.orange;
-    } else if (t.contains("success") || t.contains("done")) {
-      return Colors.green;
-    }
-    return Colors.blue;
+  Color _getColor(AppNotification n) {
+    return n.read ? Colors.grey : Colors.orange;
   }
 
   @override
@@ -33,12 +26,14 @@ class NotificationsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.done_all),
             onPressed: () {
-              service.markAllRead();
-              (context as Element).markNeedsBuild();
+              setState(() {
+                service.markAllRead();
+              });
             },
-          )
+          ),
         ],
       ),
+
       body: notifications.isEmpty
           ? const Center(
               child: Text(
@@ -53,23 +48,35 @@ class NotificationsScreen extends StatelessWidget {
 
                 return Card(
                   margin: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: 12,
                     vertical: 6,
                   ),
                   child: ListTile(
                     leading: Icon(
                       Icons.notifications,
-                      color: _color(n.title),
+                      color: _getColor(n),
                     ),
+
                     title: Text(
                       n.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight:
+                            n.read ? FontWeight.normal : FontWeight.bold,
+                      ),
                     ),
+
                     subtitle: Text(n.message),
-                    trailing: Text(
-                      "${n.time.hour}:${n.time.minute}",
-                      style: const TextStyle(fontSize: 12),
+
+                    trailing: Icon(
+                      n.read ? Icons.check : Icons.fiber_new,
+                      color: n.read ? Colors.grey : Colors.orange,
                     ),
+
+                    onTap: () {
+                      setState(() {
+                        n.read = true;
+                      });
+                    },
                   ),
                 );
               },

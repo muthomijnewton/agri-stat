@@ -1,5 +1,7 @@
 name: agric_stat_mobile
+
 description: Agricultural Statistics Dashboard - Mobile App for demand forecasting and inventory optimization
+
 publish_to: "none"
 
 version: 1.0.0+1
@@ -11,25 +13,25 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # HTTP and API
+  # HTTP & API
   http: ^1.1.0
   dio: ^5.3.0
 
-  # State Management
+  # State management
   provider: ^6.0.0
 
-  # Navigation (optional - currently unused but safe)
+  # Navigation
   go_router: ^10.0.0
 
-  # Data Serialization
+  # Data serialization
   json_annotation: ^4.8.1
 
-  # Local Storage
+  # Local storage
   shared_preferences: ^2.2.2
   sqflite: ^2.3.0
   flutter_secure_storage: ^9.0.0
 
-  # UI/UX
+  # UI
   flutter_spinkit: ^5.2.0
   intl: ^0.19.0
   fl_chart: ^0.63.0
@@ -39,7 +41,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   logger: ^2.0.0
 
-  # 🔔 FUTURE NOTIFICATIONS (ADD NOW FOR NEXT UPGRADE)
+  # Notifications
   flutter_local_notifications: ^17.0.0
 
 dev_dependencies:
@@ -60,7 +62,9 @@ flutter:
     - family: Poppins
       fonts:
         - asset: assets/fonts/Poppins-Regular.ttf
+
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+
         - asset: assets/fonts/Poppins-SemiBold.ttf
           weight: 600

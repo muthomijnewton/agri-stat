@@ -2,14 +2,24 @@ class AppNotification {
   final String title;
   final String message;
   final DateTime time;
+  final NotificationLevel level;
   bool read;
 
   AppNotification({
     required this.title,
     required this.message,
     required this.time,
+    this.level = NotificationLevel.info,
     this.read = false,
   });
+}
+
+/// SIMPLE TYPE SYSTEM (fixes your error)
+enum NotificationLevel {
+  info,
+  success,
+  warning,
+  danger,
 }
 
 class NotificationService {
@@ -18,6 +28,7 @@ class NotificationService {
       title: "Welcome",
       message: "AgriStat system started successfully",
       time: DateTime.now(),
+      level: NotificationLevel.success,
     ),
   ];
 
@@ -33,13 +44,18 @@ class NotificationService {
     }
   }
 
-  void addNotification(String title, String message) {
+  void addNotification(
+    String title,
+    String message, {
+    NotificationLevel level = NotificationLevel.info,
+  }) {
     _notifications.insert(
       0,
       AppNotification(
         title: title,
         message: message,
         time: DateTime.now(),
+        level: level,
       ),
     );
   }

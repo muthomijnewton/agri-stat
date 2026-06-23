@@ -27,7 +27,6 @@ class AgriculturalStatApp extends StatelessWidget {
     return MaterialApp(
       title: 'AgriStat Dashboard',
       debugShowCheckedModeBanner: false,
-
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
@@ -37,16 +36,11 @@ class AgriculturalStatApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: AppTheme.primary,
-                ),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
 
           final loggedIn = snapshot.data ?? false;
-
           return loggedIn ? const HomeScreen() : const LoginScreen();
         },
       ),
@@ -68,15 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _unreadCount = 0;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    ProductsScreen(),
-    TransactionsScreen(),
-    ForecastsScreen(),
-    RecommendationsScreen(),
-    NotificationsScreen(),
-  ];
-
   final List<String> _titles = const [
     "Dashboard",
     "Products",
@@ -86,20 +71,29 @@ class _HomeScreenState extends State<HomeScreen> {
     "Notifications",
   ];
 
+  final List<Widget> _screens = const [
+    DashboardScreen(),
+    ProductsScreen(),
+    TransactionsScreen(),
+    ForecastsScreen(),
+    RecommendationsScreen(),
+    NotificationsScreen(), // ✅ FIXED (NO SERVICE)
+  ];
+
   @override
   void initState() {
     super.initState();
     _loadNotifications();
   }
 
-  Future<void> _loadNotifications() async {
-    final count = await _notificationService.getUnreadCount();
+  void _loadNotifications() {
+    final count = _notificationService.getUnreadCount();
 
-    if (mounted) {
-      setState(() {
-        _unreadCount = count;
-      });
-    }
+    if (!mounted) return;
+
+    setState(() {
+      _unreadCount = count;
+    });
   }
 
   void _refresh() {
@@ -113,6 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Widget _getScreen(int index) {
+    return _screens[index];
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -120,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("🌾 ${_titles[_selectedIndex]}"),
-
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -161,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
-        child: _screens[_selectedIndex],
+        child: _getScreen(_selectedIndex),
       ),
 
       bottomNavigationBar: NavigationBar(
@@ -169,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
         },
-
         backgroundColor: isDark ? Colors.black : Colors.white,
 
         destinations: const [
