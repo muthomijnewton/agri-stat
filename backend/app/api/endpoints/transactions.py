@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_,func
 from app.db.database import get_db
 from app.models.models import Transaction
 from app.schemas.schemas import TransactionCreate, TransactionUpdate, TransactionResponse
@@ -75,3 +75,14 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
     db.delete(transaction)
     db.commit()
     return None
+
+@router.get("/summary") # The full path will be /api/transactions/summary
+def get_transaction_summary(db: Session = Depends(get_db)):
+    # This queries the database to sum amounts grouped by category
+    results = db.query(
+        Transaction.category, 
+        func.sum(Transaction.amount).label("total_amount")
+    ).group_by(Transaction.category).all()
+    
+    # Transform the result into a clean list of dictionaries
+    return [{"category": r.category, "total": r.total_amount} for r in results]
