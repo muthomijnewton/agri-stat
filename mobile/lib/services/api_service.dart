@@ -63,7 +63,7 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/products',
+        '/products/',
         queryParameters: {
           'skip': skip,
           'limit': limit,
