@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class SummaryChart extends StatelessWidget {
   final List<dynamic> data; // Your JSON list
 
-  SummaryChart({required this.data});
+  const SummaryChart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {

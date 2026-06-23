@@ -6,12 +6,16 @@ class RecommendationsScreen extends StatefulWidget {
   const RecommendationsScreen({super.key});
 
   @override
-  State<RecommendationsScreen> createState() => _RecommendationsScreenState();
+  State<RecommendationsScreen> createState() =>
+      _RecommendationsScreenState();
 }
 
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
   final ApiService _apiService = ApiService();
+
   bool _isLoading = true;
+  bool _actionLoading = false;
+
   List<dynamic> _recommendations = [];
 
   @override
@@ -23,44 +27,61 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   Future<void> _loadRecommendations() async {
     try {
       setState(() => _isLoading = true);
-      final recommendations = await _apiService.getRecommendations();
+
+      final data = await _apiService.getRecommendations();
+
       setState(() {
-        _recommendations = recommendations;
+        _recommendations = data;
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading recommendations: $e')),
-      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading recommendations: $e')),
+        );
+      }
     }
   }
 
-  Future<void> _approveRecommendation(int id) async {
+  Future<void> _approve(int id) async {
     try {
+      setState(() => _actionLoading = true);
+
       await _apiService.approveRecommendation(id);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recommendation approved!')),
+        const SnackBar(content: Text('Approved')),
       );
-      _loadRecommendations();
+
+      await _loadRecommendations();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error approving recommendation: $e')),
+        SnackBar(content: Text('Approve failed: $e')),
       );
+    } finally {
+      setState(() => _actionLoading = false);
     }
   }
 
-  Future<void> _implementRecommendation(int id) async {
+  Future<void> _implement(int id) async {
     try {
+      setState(() => _actionLoading = true);
+
       await _apiService.implementRecommendation(id);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recommendation implemented!')),
+        const SnackBar(content: Text('Implemented')),
       );
-      _loadRecommendations();
+
+      await _loadRecommendations();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error implementing recommendation: $e')),
+        SnackBar(content: Text('Implement failed: $e')),
       );
+    } finally {
+      setState(() => _actionLoading = false);
     }
   }
 
@@ -71,32 +92,43 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     }
 
     if (_recommendations.isEmpty) {
-      return const Center(
-        child: Text('No recommendations found'),
-      );
+      return const Center(child: Text('No recommendations found'));
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadRecommendations,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: _recommendations.length,
-        itemBuilder: (context, index) {
-          final rec = _recommendations[index];
-          return RecommendationCard(
-            id: rec['id'],
-            productName: 'Product ID: ${rec['product_id']}',
-            recommendedQuantity: rec['recommended_quantity'],
-            status: rec['status'],
-            onApprove: rec['status'] == 'pending'
-                ? () => _approveRecommendation(rec['id'])
-                : null,
-            onImplement: rec['status'] == 'approved'
-                ? () => _implementRecommendation(rec['id'])
-                : null,
-          );
-        },
-      ),
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: _loadRecommendations,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: _recommendations.length,
+            itemBuilder: (context, index) {
+              final rec = _recommendations[index];
+
+              return RecommendationCard(
+                id: rec['id'],
+                productName: 'Product ${rec['product_id']}',
+                recommendedQuantity: rec['recommended_quantity'],
+                status: rec['status'] ?? 'pending',
+                onApprove: rec['status'] == 'pending'
+                    ? () => _approve(rec['id'])
+                    : null,
+                onImplement: rec['status'] == 'approved'
+                    ? () => _implement(rec['id'])
+                    : null,
+              );
+            },
+          ),
+        ),
+
+        if (_actionLoading)
+          Container(
+            color: Colors.black.withValues(alpha: 0.2),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -31,10 +31,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _products = products;
         _isLoading = false;
       });
-
-      // DEBUG (keep for now)
-      print("PRODUCTS LENGTH: ${_products.length}");
-      print("FIRST PRODUCT: ${_products.isNotEmpty ? _products[0] : 'EMPTY'}");
     } catch (e) {
       setState(() => _isLoading = false);
 

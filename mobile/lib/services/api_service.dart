@@ -47,8 +47,8 @@ class ApiService {
 
     return Map<String, dynamic>.from(response.data);
   } on DioException catch (e) {
-    print("STATUS: ${e.response?.statusCode}");
-    print("DATA: ${e.response?.data}");
+    logger.e('Login failed with status ${e.response?.statusCode}');
+    logger.e('Login response: ${e.response?.data}');
     rethrow;
   }
 }

@@ -5,6 +5,7 @@ class RecommendationCard extends StatelessWidget {
   final String productName;
   final int recommendedQuantity;
   final String status;
+
   final VoidCallback? onApprove;
   final VoidCallback? onImplement;
 
@@ -18,100 +19,106 @@ class RecommendationCard extends StatelessWidget {
     this.onImplement,
   });
 
-  Color _getStatusColor() {
-    switch (status) {
-      case 'pending':
-        return Colors.orange;
+  Color _statusColor() {
+    switch (status.toLowerCase()) {
       case 'approved':
         return Colors.blue;
       case 'implemented':
         return Colors.green;
+      case 'rejected':
+        return Colors.red;
       default:
-        return Colors.grey;
+        return Colors.orange;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isPending = status.toLowerCase() == 'pending';
+    final isApproved = status.toLowerCase() == 'approved';
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(
-              color: _getStatusColor(),
-              width: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    productName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _statusColor().withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: TextStyle(
+                      color: _statusColor(),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+
+            const SizedBox(height: 10),
+
+            Text(
+              "Recommended Quantity: $recommendedQuantity",
+              style: const TextStyle(fontSize: 14),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ACTIONS
+            Row(
+              children: [
+                if (isPending)
                   Expanded(
-                    child: Text(
-                      productName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    child: ElevatedButton(
+                      onPressed: onApprove,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
                       ),
+                      child: const Text("Approve"),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor().withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      status.toUpperCase(),
-                      style: TextStyle(
-                        color: _getStatusColor(),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
+
+                if (isPending) const SizedBox(width: 10),
+
+                if (isApproved)
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onImplement,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
                       ),
+                      child: const Text("Implement"),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Recommended: $recommendedQuantity units',
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              if (status == 'pending' && onApprove != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onApprove,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                    ),
-                    child: const Text('✓ Approve'),
+
+                if (!isPending && !isApproved)
+                  const Expanded(
+                    child: SizedBox(),
                   ),
-                ),
-              if (status == 'approved' && onImplement != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onImplement,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: const Text('✓ Implement'),
-                  ),
-                ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
