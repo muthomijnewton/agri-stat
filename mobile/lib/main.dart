@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'screens/login_screen.dart'; 
 import 'screens/dashboard_screen.dart';
 import 'screens/products_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/forecasts_screen.dart';
 import 'screens/recommendations_screen.dart';
+import 'services/auth_service.dart'; // <-- Added import for AuthService
 
 void main() {
   runApp(const AgriculturalStatApp());
@@ -14,6 +16,8 @@ class AgriculturalStatApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AuthService authService = AuthService();
+
     return MaterialApp(
       title: 'AgriStat Dashboard',
       debugShowCheckedModeBanner: false,
@@ -28,7 +32,29 @@ class AgriculturalStatApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: const HomeScreen(),
+      // Use a FutureBuilder to check login status before selecting the initial screen
+      home: FutureBuilder<bool>(
+        future: authService.isLoggedIn(),
+        builder: (context, snapshot) {
+          // While checking storage, display a clean loading screen
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                ),
+              ),
+            );
+          }
+          
+          // If true, route directly to HomeScreen; otherwise, show LoginScreen
+          if (snapshot.hasData && snapshot.data == true) {
+            return const HomeScreen();
+          } else {
+            return const LoginScreen();
+          }
+        },
+      ),
     );
   }
 }
@@ -60,6 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xFF2E7D32), 
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed, 
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
@@ -91,5 +120,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-// Placeholder screens
