@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_,func
+from sqlalchemy import and_, func
 from app.db.database import get_db
 from app.models.models import Transaction
 from app.schemas.schemas import TransactionCreate, TransactionUpdate, TransactionResponse
@@ -8,6 +8,19 @@ from typing import List
 from datetime import date
 
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
+
+# --- ROUTE ORDER IS CRITICAL ---
+# 1. Specific static paths must go before dynamic {id} paths
+
+@router.get("/summary")
+def get_transaction_summary(db: Session = Depends(get_db)):
+    """Get summarized transaction totals by category"""
+    results = db.query(
+        Transaction.category, 
+        func.sum(Transaction.amount).label("total_amount")
+    ).group_by(Transaction.category).all()
+    
+    return [{"category": r.category, "total": r.total_amount} for r in results]
 
 @router.get("/", response_model=List[TransactionResponse])
 def list_transactions(
@@ -18,7 +31,7 @@ def list_transactions(
     end_date: date = Query(None),
     db: Session = Depends(get_db)
 ):
-    """Get transactions with optional filtering by product and date range"""
+    """Get transactions with optional filtering"""
     query = db.query(Transaction)
     
     if product_id:
@@ -30,8 +43,7 @@ def list_transactions(
             Transaction.transaction_date <= end_date
         ))
     
-    transactions = query.offset(skip).limit(limit).all()
-    return transactions
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
@@ -41,9 +53,10 @@ def get_transaction(transaction_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
 
+# --- Other methods (POST, PUT, DELETE) follow ---
+
 @router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def create_transaction(transaction: TransactionCreate, db: Session = Depends(get_db)):
-    """Create a new transaction"""
     db_transaction = Transaction(**transaction.dict())
     db.add(db_transaction)
     db.commit()
@@ -52,7 +65,6 @@ def create_transaction(transaction: TransactionCreate, db: Session = Depends(get
 
 @router.put("/{transaction_id}", response_model=TransactionResponse)
 def update_transaction(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
-    """Update a transaction"""
     transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -67,7 +79,6 @@ def update_transaction(transaction_id: int, transaction_update: TransactionUpdat
 
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
-    """Delete a transaction"""
     transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -75,14 +86,3 @@ def delete_transaction(transaction_id: int, db: Session = Depends(get_db)):
     db.delete(transaction)
     db.commit()
     return None
-
-@router.get("/summary") # The full path will be /api/transactions/summary
-def get_transaction_summary(db: Session = Depends(get_db)):
-    # This queries the database to sum amounts grouped by category
-    results = db.query(
-        Transaction.category, 
-        func.sum(Transaction.amount).label("total_amount")
-    ).group_by(Transaction.category).all()
-    
-    # Transform the result into a clean list of dictionaries
-    return [{"category": r.category, "total": r.total_amount} for r in results]
