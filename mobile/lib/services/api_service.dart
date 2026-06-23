@@ -94,6 +94,18 @@ class ApiService {
     }
   }
 
+  // --- NEW SUMMARY ENDPOINT ---
+  Future<List<dynamic>> fetchSummary() async {
+    try {
+      final response = await _dio.get('/transactions/summary');
+      return response.data;
+    } catch (e) {
+      logger.e('Error fetching transaction summary: $e');
+      rethrow;
+    }
+  }
+  // ----------------------------
+
   // Forecasts API
   Future<List<dynamic>> getForecasts({
     int skip = 0,
