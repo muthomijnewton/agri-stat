@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from app.db.database import get_db
-from app.models.models import Transaction
+from app.models.models import Transaction,Product
 from app.schemas.schemas import TransactionCreate, TransactionUpdate, TransactionResponse
 from typing import List
 from datetime import date
