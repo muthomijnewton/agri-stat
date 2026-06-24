@@ -1,86 +1,133 @@
 import 'package:flutter/material.dart';
+
 import '../services/notification_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  State<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
-  final NotificationService service = NotificationService();
+class _NotificationsScreenState
+    extends State<NotificationsScreen> {
+
+  final NotificationService service =
+      NotificationService();
+
+  List<AppNotification> notifications = [];
+
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    loadNotifications();
+  }
+
+  Future<void> loadNotifications() async {
+    final data =
+        await service.getNotifications();
+
+    if (!mounted) return;
+
+    setState(() {
+      notifications = data;
+
+      loading = false;
+    });
+  }
 
   Color _getColor(AppNotification n) {
-    return n.read ? Colors.grey : Colors.orange;
+    switch (n.type) {
+      case 'danger':
+        return Colors.red;
+
+      case 'warning':
+        return Colors.orange;
+
+      case 'success':
+        return Colors.green;
+
+      default:
+        return Colors.blue;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final notifications = service.notifications;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Notifications"),
+        title:
+            const Text('Notifications'),
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.done_all),
-            onPressed: () {
-              setState(() {
-                service.markAllRead();
-              });
-            },
+            icon: const Icon(Icons.refresh),
+
+            onPressed: loadNotifications,
           ),
         ],
       ),
 
-      body: notifications.isEmpty
+      body: loading
           ? const Center(
-              child: Text(
-                "No notifications",
-                style: TextStyle(fontSize: 16),
-              ),
+              child:
+                  CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                final n = notifications[index];
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+          : notifications.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No notifications',
                   ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.notifications,
-                      color: _getColor(n),
-                    ),
+                )
+              : ListView.builder(
+                  itemCount:
+                      notifications.length,
 
-                    title: Text(
-                      n.title,
-                      style: TextStyle(
-                        fontWeight:
-                            n.read ? FontWeight.normal : FontWeight.bold,
+                  itemBuilder:
+                      (context, index) {
+
+                    final n =
+                        notifications[index];
+
+                    return Card(
+                      margin:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ),
 
-                    subtitle: Text(n.message),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.notifications,
 
-                    trailing: Icon(
-                      n.read ? Icons.check : Icons.fiber_new,
-                      color: n.read ? Colors.grey : Colors.orange,
-                    ),
+                          color:
+                              _getColor(n),
+                        ),
 
-                    onTap: () {
-                      setState(() {
-                        n.read = true;
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
+                        title:
+                            Text(n.title),
+
+                        subtitle:
+                            Text(n.message),
+
+                        trailing: Icon(
+                          n.read
+                              ? Icons.check
+                              : Icons.fiber_new,
+
+                          color: n.read
+                              ? Colors.grey
+                              : Colors.orange,
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

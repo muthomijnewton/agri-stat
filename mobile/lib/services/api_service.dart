@@ -238,6 +238,63 @@ class ApiService {
     }
   }
 
+// ==========================
+// NOTIFICATIONS
+// ==========================
+
+Future<List<dynamic>> getNotifications() async {
+  try {
+    final response = await _dio.get('/notifications/');
+
+    final data = response.data;
+
+    if (data is List) {
+      return data;
+    }
+
+    return [];
+  } catch (e) {
+    logger.e('Error fetching notifications: $e');
+    return [];
+  }
+}
+
+Future<int> getUnreadNotificationCount() async {
+  try {
+    final response =
+        await _dio.get('/notifications/unread-count');
+
+    final data = response.data;
+
+    return data['count'] ?? 0;
+  } catch (e) {
+    logger.e('Error fetching unread count: $e');
+    return 0;
+  }
+}
+
+Future<bool> markNotificationRead(int id) async {
+  try {
+    await _dio.patch('/notifications/$id/read');
+
+    return true;
+  } catch (e) {
+    logger.e('Error marking notification as read: $e');
+    return false;
+  }
+}
+
+Future<bool> markAllNotificationsRead() async {
+  try {
+    await _dio.patch('/notifications/read-all');
+
+    return true;
+  } catch (e) {
+    logger.e('Error marking all notifications as read: $e');
+    return false;
+  }
+}
+
   // ==========================
   // HEALTH CHECK
   // ==========================

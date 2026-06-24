@@ -9,7 +9,7 @@ import 'screens/recommendations_screen.dart';
 import 'screens/notifications_screen.dart';
 
 import 'services/auth_service.dart';
-import 'services/notification_service.dart';
+import 'services/api_service.dart';
 
 import 'theme/app_theme.dart';
 
@@ -58,7 +58,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  final NotificationService _notificationService = NotificationService();
+  final ApiService _apiService = ApiService();
 
   int _unreadCount = 0;
 
@@ -86,15 +86,16 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadNotifications();
   }
 
-  void _loadNotifications() {
-    final count = _notificationService.getUnreadCount();
+  Future<void> _loadNotifications() async {
+  final count =
+      await _apiService.getUnreadNotificationCount();
 
-    if (!mounted) return;
+  if (!mounted) return;
 
-    setState(() {
-      _unreadCount = count;
-    });
-  }
+  setState(() {
+    _unreadCount = count;
+  });
+}
 
   void _refresh() {
     setState(() {});

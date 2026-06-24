@@ -1,62 +1,67 @@
+import 'api_service.dart';
+
 class AppNotification {
+  final int id;
   final String title;
   final String message;
-  final DateTime time;
-  final NotificationLevel level;
-  bool read;
+  final String type;
+  final bool read;
+  final DateTime createdAt;
 
   AppNotification({
+    required this.id,
     required this.title,
     required this.message,
-    required this.time,
-    this.level = NotificationLevel.info,
-    this.read = false,
+    required this.type,
+    required this.read,
+    required this.createdAt,
   });
-}
 
-/// SIMPLE TYPE SYSTEM (fixes your error)
-enum NotificationLevel {
-  info,
-  success,
-  warning,
-  danger,
+  factory AppNotification.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return AppNotification(
+      id: json['id'] ?? 0,
+
+      title: json['title'] ?? '',
+
+      message: json['message'] ?? '',
+
+      type: json['type'] ?? 'info',
+
+      read: json['read'] ?? false,
+
+      createdAt: DateTime.parse(
+        json['created_at'],
+      ),
+    );
+  }
 }
 
 class NotificationService {
-  final List<AppNotification> _notifications = [
-    AppNotification(
-      title: "Welcome",
-      message: "AgriStat system started successfully",
-      time: DateTime.now(),
-      level: NotificationLevel.success,
-    ),
-  ];
+  final ApiService api = ApiService();
 
-  List<AppNotification> get notifications => _notifications;
+  Future<List<AppNotification>> getNotifications() async {
+    try {
+      final response =
+          await api.getNotifications();
 
-  int getUnreadCount() {
-    return _notifications.where((n) => !n.read).length;
-  }
-
-  void markAllRead() {
-    for (var n in _notifications) {
-      n.read = true;
+      return response
+          .map<AppNotification>(
+            (item) =>
+                AppNotification.fromJson(item),
+          )
+          .toList();
+    } catch (e) {
+      return [];
     }
   }
 
-  void addNotification(
-    String title,
-    String message, {
-    NotificationLevel level = NotificationLevel.info,
-  }) {
-    _notifications.insert(
-      0,
-      AppNotification(
-        title: title,
-        message: message,
-        time: DateTime.now(),
-        level: level,
-      ),
-    );
+  Future<int> getUnreadCount() async {
+    try {
+      return await api.getUnreadNotificationCount();
+    } catch (e) {
+      return 0;
+    }
   }
 }
