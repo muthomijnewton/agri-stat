@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import '../services/api_service.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -13,254 +14,583 @@ class ProductDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+  State<ProductDetailsScreen> createState() =>
+      _ProductDetailsScreenState();
 }
 
-class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  final ApiService _apiService = ApiService();
+class _ProductDetailsScreenState
+    extends State<ProductDetailsScreen> {
+  final ApiService _apiService =
+      ApiService();
 
   bool _isLoading = true;
 
   Map<String, dynamic>? _product;
+
   List<dynamic> _transactions = [];
+
   List<dynamic> _recommendations = [];
-  List<dynamic> _forecasts = []; // ✅ ADDED
+
+  List<dynamic> _forecasts = [];
 
   @override
   void initState() {
     super.initState();
+
     _loadData();
   }
 
+  // ===========================
+  // SAFE CONVERTERS
+  // ===========================
+
+  double _toDouble(dynamic value) {
+    if (value == null) return 0;
+
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    return double.tryParse(
+          value.toString(),
+        ) ??
+        0;
+  }
+
+  String _safe(dynamic value) {
+    if (value == null) return '--';
+
+    return value.toString();
+  }
+
+  // ===========================
+  // LOAD DATA
+  // ===========================
+
   Future<void> _loadData() async {
     try {
-      setState(() => _isLoading = true);
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
 
-      final product = await _apiService.getProduct(widget.productId);
-      final transactions = await _apiService.getTransactions(
-        productId: widget.productId,
-      );
-      final recommendations = await _apiService.getRecommendations(
-        productId: widget.productId,
-      );
-      final forecasts = await _apiService.getProductForecasts(widget.productId); // ✅ ADDED
+      final results =
+          await Future.wait([
+        _apiService.getProduct(
+          widget.productId,
+        ),
+
+        _apiService.getTransactions(
+          productId:
+              widget.productId,
+        ),
+
+        _apiService
+            .getRecommendations(
+          productId:
+              widget.productId,
+        ),
+
+        _apiService
+            .getProductForecasts(
+          widget.productId,
+        ),
+      ]);
+
+      if (!mounted) return;
 
       setState(() {
-        _product = product;
-        _transactions = transactions;
-        _recommendations = recommendations;
-        _forecasts = forecasts;
+        _product =
+            results[0]
+                as Map<String, dynamic>?;
+
+        _transactions =
+            (results[1] as List?) ??
+                [];
+
+        _recommendations =
+            (results[2] as List?) ??
+                [];
+
+        _forecasts =
+            (results[3] as List?) ??
+                [];
+
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (!mounted) return;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading product: $e')),
-        );
-      }
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error: $e',
+          ),
+        ),
+      );
     }
   }
 
-  // ================= FORECAST CHART =================
+  // ===========================
+  // FORECAST CHART
+  // ===========================
+
   List<FlSpot> _buildForecastSpots() {
-    if (_forecasts.isEmpty) return [];
-
-    final sorted = List.from(_forecasts)
-      ..sort((a, b) => a['forecast_date'].compareTo(b['forecast_date']));
-
-    return List.generate(sorted.length, (index) {
-      return FlSpot(
-        index.toDouble(),
-        (sorted[index]['predicted_demand'] as num).toDouble(),
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (_forecasts.isEmpty) {
+      return [];
     }
 
-    final product = _product ?? {};
-    final spots = _buildForecastSpots();
+    final sorted =
+        List.from(_forecasts);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.productName),
-        backgroundColor: const Color(0xFF2E7D32),
+    sorted.sort(
+      (a, b) => a[
+              'forecast_date']
+          .compareTo(
+        b['forecast_date'],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+    );
 
-            // ================= PRODUCT INFO =================
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product['name'] ?? widget.productName,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(product['category'] ?? 'Uncategorized'),
-                    const SizedBox(height: 8),
-                    Text("Price: ${product['unit_price'] ?? 'N/A'}"),
-                    Text("Unit: ${product['unit'] ?? 'N/A'}"),
-                  ],
-                ),
+    return List.generate(
+      sorted.length,
+      (index) {
+        return FlSpot(
+          index.toDouble(),
+
+          _toDouble(
+            sorted[index][
+                'predicted_demand'],
+          ),
+        );
+      },
+    );
+  }
+
+  // ===========================
+  // KPI CARD
+  // ===========================
+
+  Widget _statCard(
+    String title,
+    String value,
+    IconData icon,
+  ) {
+    return Card(
+      elevation: 2,
+
+      child: Padding(
+        padding:
+            const EdgeInsets.all(
+          16,
+        ),
+
+        child: Column(
+          children: [
+            Icon(
+              icon,
+
+              color: const Color(
+                0xFF2E7D32,
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // ================= FORECAST GRAPH (NEW) =================
-            const Text(
-              "Forecast Trend",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const SizedBox(
+              height: 8,
             ),
 
-            const SizedBox(height: 10),
+            Text(
+              value,
 
-            SizedBox(
-              height: 220,
-              child: spots.isEmpty
-                  ? const Center(child: Text("No forecast data"))
-                  : LineChart(
-                      LineChartData(
-                        gridData: const FlGridData(show: true),
-                        titlesData: const FlTitlesData(show: false),
-                        borderData: FlBorderData(show: true),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: spots,
-                            isCurved: true,
-                            barWidth: 3,
-                            color: const Color(0xFF2E7D32),
-                            dotData: const FlDotData(show: true),
-                          ),
-                        ],
-                      ),
-                    ),
+              style:
+                  const TextStyle(
+                fontSize: 20,
+
+                fontWeight:
+                    FontWeight.bold,
+              ),
             ),
 
-            const SizedBox(height: 16),
-
-            // ================= STATS =================
-            Row(
-              children: [
-                Expanded(
-                  child: _statCard(
-                    "Transactions",
-                    _transactions.length.toString(),
-                    Icons.receipt,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _statCard(
-                    "Recommendations",
-                    _recommendations.length.toString(),
-                    Icons.recommend,
-                  ),
-                ),
-              ],
+            const SizedBox(
+              height: 4,
             ),
 
-            const SizedBox(height: 20),
-
-            // ================= TRANSACTIONS =================
-            const Text(
-              "Recent Transactions",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 10),
-
-            if (_transactions.isEmpty)
-              const Text("No transactions for this product")
-            else
-              ..._transactions.take(5).map((t) {
-                return Card(
-                  child: ListTile(
-                    title: Text("Qty: ${t['quantity']}"),
-                    subtitle: Text(t['transaction_date'] ?? ''),
-                    trailing: Text(
-                      "${t['total_price']}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E7D32),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-
-            const SizedBox(height: 20),
-
-            // ================= RECOMMENDATIONS =================
-            const Text(
-              "Recommendations",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 10),
-
-            if (_recommendations.isEmpty)
-              const Text("No recommendations for this product")
-            else
-              ..._recommendations.map((r) {
-                final status = r['status'] ?? 'pending';
-
-                return Card(
-                  child: ListTile(
-                    title: Text("Qty: ${r['recommended_quantity']}"),
-                    subtitle: Text("Status: $status"),
-                    trailing: Chip(
-                      label: Text(status),
-                      backgroundColor: status == "approved"
-                          ? Colors.green.withValues(alpha: 0.2)
-                          : status == "pending"
-                              ? Colors.orange.withValues(alpha: 0.2)
-                              : Colors.blue.withValues(alpha: 0.2),
-                    ),
-                  ),
-                );
-              }),
+            Text(title),
           ],
         ),
       ),
     );
   }
 
-  Widget _statCard(String title, String value, IconData icon) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+  // ===========================
+  // BUILD
+  // ===========================
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child:
+              CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final product =
+        _product ?? {};
+
+    final spots =
+        _buildForecastSpots();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.productName,
+        ),
+      ),
+
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+
+        child: ListView(
+          padding:
+              const EdgeInsets.all(
+            16,
+          ),
+
           children: [
-            Icon(icon, color: const Color(0xFF2E7D32)),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            // =====================
+            // PRODUCT CARD
+            // =====================
+
+            Hero(
+              tag:
+                  'product_${widget.productId}',
+
+              child: Card(
+                elevation: 3,
+
+                child: Padding(
+                  padding:
+                      const EdgeInsets.all(
+                    18,
+                  ),
+
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
+
+                    children: [
+                      Text(
+                        _safe(
+                          product['name'],
+                        ),
+
+                        style:
+                            const TextStyle(
+                          fontSize: 24,
+
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+                      Text(
+                        'Category: ${_safe(product['category'])}',
+                      ),
+
+                      Text(
+                        'Price: KES ${_safe(product['unit_price'])}',
+                      ),
+
+                      Text(
+                        'Unit: ${_safe(product['unit'])}',
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            Text(title),
+
+            const SizedBox(
+              height: 24,
+            ),
+
+            // =====================
+            // FORECAST GRAPH
+            // =====================
+
+            const Text(
+              'Forecast Trend',
+
+              style: TextStyle(
+                fontSize: 18,
+
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            SizedBox(
+              height: 240,
+
+              child: spots.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No forecast data',
+                      ),
+                    )
+
+                  : LineChart(
+                      LineChartData(
+                        gridData:
+                            const FlGridData(
+                          show: true,
+                        ),
+
+                        titlesData:
+                            const FlTitlesData(
+                          show: false,
+                        ),
+
+                        borderData:
+                            FlBorderData(
+                          show: true,
+                        ),
+
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: spots,
+
+                            isCurved:
+                                true,
+
+                            barWidth: 4,
+
+                            color:
+                                const Color(
+                              0xFF2E7D32,
+                            ),
+
+                            dotData:
+                                const FlDotData(
+                              show: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+
+            const SizedBox(
+              height: 24,
+            ),
+
+            // =====================
+            // KPIs
+            // =====================
+
+            Row(
+              children: [
+                Expanded(
+                  child: _statCard(
+                    'Transactions',
+
+                    _transactions.length
+                        .toString(),
+
+                    Icons.receipt_long,
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 12,
+                ),
+
+                Expanded(
+                  child: _statCard(
+                    'Recommendations',
+
+                    _recommendations
+                        .length
+                        .toString(),
+
+                    Icons.lightbulb,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(
+              height: 24,
+            ),
+
+            // =====================
+            // TRANSACTIONS
+            // =====================
+
+            const Text(
+              'Recent Transactions',
+
+              style: TextStyle(
+                fontSize: 18,
+
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            if (_transactions
+                .isEmpty)
+              const Text(
+                'No transactions',
+              ),
+
+            ..._transactions
+                .take(5)
+                .map(
+              (t) {
+                return Card(
+                  child: ListTile(
+                    leading:
+                        const Icon(
+                      Icons.receipt,
+                    ),
+
+                    title: Text(
+                      'Qty: ${_safe(t['quantity'])}',
+                    ),
+
+                    subtitle: Text(
+                      _safe(
+                        t[
+                            'transaction_date'],
+                      ),
+                    ),
+
+                    trailing: Text(
+                      'KES ${_safe(t['total_price'])}',
+
+                      style:
+                          const TextStyle(
+                        color: Color(
+                          0xFF2E7D32,
+                        ),
+
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(
+              height: 24,
+            ),
+
+            // =====================
+            // RECOMMENDATIONS
+            // =====================
+
+            const Text(
+              'Recommendations',
+
+              style: TextStyle(
+                fontSize: 18,
+
+                fontWeight:
+                    FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            if (_recommendations
+                .isEmpty)
+              const Text(
+                'No recommendations',
+              ),
+
+            ..._recommendations
+                .map(
+              (r) {
+                final status =
+                    _safe(
+                  r['status'],
+                );
+
+                return Card(
+                  child: ListTile(
+                    leading:
+                        const Icon(
+                      Icons.lightbulb,
+                    ),
+
+                    title: Text(
+                      'Qty: ${_safe(r['recommended_quantity'])}',
+                    ),
+
+                    subtitle: Text(
+                      'Status: $status',
+                    ),
+
+                    trailing: Chip(
+                      label:
+                          Text(status),
+
+                      backgroundColor:
+                          status ==
+                                  'approved'
+                              ? Colors.green
+                                  .withValues(
+                                  alpha:
+                                      0.2,
+                                )
+
+                              : status ==
+                                      'pending'
+                                  ? Colors.orange
+                                      .withValues(
+                                      alpha:
+                                          0.2,
+                                    )
+
+                                  : Colors.blue
+                                      .withValues(
+                                      alpha:
+                                          0.2,
+                                    ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../screens/product_details_screen.dart';
 
 class ProductCard extends StatefulWidget {
@@ -29,135 +30,288 @@ class _ProductCardState extends State<ProductCard>
     switch ((category ?? '').toLowerCase()) {
       case 'vegetables':
         return Colors.green;
+
       case 'fruits':
         return Colors.orange;
+
       case 'grains':
         return Colors.brown;
+
       case 'dairy':
         return Colors.blue;
+
       default:
         return const Color(0xFF2E7D32);
     }
+  }
+
+  String _formatPrice(double? price) {
+    if (price == null) return '--';
+
+    return price.toStringAsFixed(0);
   }
 
   @override
   Widget build(BuildContext context) {
     final color = _categoryColor(widget.category);
 
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailsScreen(
-              productId: widget.id,
-              productName: widget.name,
+    final isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
+
+    return Hero(
+      tag: 'product_${widget.id}',
+
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() {
+            _pressed = true;
+          });
+        },
+
+        onTapUp: (_) {
+          setState(() {
+            _pressed = false;
+          });
+        },
+
+        onTapCancel: () {
+          setState(() {
+            _pressed = false;
+          });
+        },
+
+        onTap: () {
+          Navigator.push(
+            context,
+
+            MaterialPageRoute(
+              builder: (_) => ProductDetailsScreen(
+                productId: widget.id,
+
+                productName: widget.name,
+              ),
             ),
+          );
+        },
+
+        child: AnimatedContainer(
+          duration: const Duration(
+            milliseconds: 150,
           ),
-        );
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()
-          ..scale(_pressed ? 0.98 : 1.0),
 
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(14),
+          curve: Curves.easeOut,
 
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
+          transform: Matrix4.identity()
+  ..scale(
+    _pressed ? 0.98 : 1.0,
+  ),
 
-        child: Row(
-          children: [
-            // ICON SECTION
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+          margin:
+              const EdgeInsets.symmetric(
+            vertical: 8,
+          ),
+
+          padding:
+              const EdgeInsets.all(14),
+
+          decoration: BoxDecoration(
+            borderRadius:
+                BorderRadius.circular(18),
+
+            color: isDark
+                ? const Color(
+                    0xFF1E1E1E,
+                  )
+                : Colors.white,
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black
+                    .withValues(
+                  alpha: 0.06,
+                ),
+
+                blurRadius: 12,
+
+                offset: const Offset(
+                  0,
+                  6,
+                ),
               ),
-              child: Icon(
-                Icons.agriculture,
-                color: color,
-              ),
-            ),
+            ],
+          ),
 
-            const SizedBox(width: 12),
+          child: Row(
+            children: [
+              // ======================
+              // ICON
+              // ======================
 
-            // TEXT SECTION
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Container(
+                width: 56,
+
+                height: 56,
+
+                decoration: BoxDecoration(
+                  color: color.withValues(
+                    alpha: 0.12,
                   ),
 
-                  const SizedBox(height: 4),
-
-                  Text(
-                    widget.category ?? 'Uncategorized',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
+                  borderRadius:
+                      BorderRadius.circular(
+                    14,
                   ),
+                ),
 
-                  const SizedBox(height: 6),
+                child: Icon(
+                  Icons.agriculture,
 
-                  if (widget.unit != null)
+                  size: 28,
+
+                  color: color,
+                ),
+              ),
+
+              const SizedBox(
+                width: 14,
+              ),
+
+              // ======================
+              // TEXT
+              // ======================
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
+
+                  children: [
                     Text(
-                      widget.unit!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                      widget.name,
+
+                      maxLines: 1,
+
+                      overflow:
+                          TextOverflow
+                              .ellipsis,
+
+                      style:
+                          const TextStyle(
+                        fontSize: 17,
+
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
-                ],
-              ),
-            ),
 
-            // PRICE SECTION
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (widget.price != null)
+                    const SizedBox(
+                      height: 5,
+                    ),
+
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(
+                        horizontal: 10,
+
+                        vertical: 4,
+                      ),
+
+                      decoration:
+                          BoxDecoration(
+                        color: color
+                            .withValues(
+                          alpha: 0.12,
+                        ),
+
+                        borderRadius:
+                            BorderRadius.circular(
+                          20,
+                        ),
+                      ),
+
+                      child: Text(
+                        widget.category ??
+                            'Uncategorized',
+
+                        style:
+                            TextStyle(
+                          color: color,
+
+                          fontWeight:
+                              FontWeight.w600,
+
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 8,
+                    ),
+
+                    if (widget.unit != null &&
+                        widget.unit!.isNotEmpty)
+                      Text(
+                        widget.unit!,
+
+                        style:
+                            TextStyle(
+                          color:
+                              Colors.grey[
+                                  500],
+
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // ======================
+              // PRICE
+              // ======================
+
+              Column(
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .center,
+
+                crossAxisAlignment:
+                    CrossAxisAlignment
+                        .end,
+
+                children: [
                   Text(
-                    'KES ${widget.price!.toStringAsFixed(0)}',
+                    'KES ${_formatPrice(widget.price)}',
+
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
                       color: color,
+
+                      fontWeight:
+                          FontWeight.bold,
+
+                      fontSize: 16,
                     ),
                   ),
 
-                const SizedBox(height: 6),
+                  const SizedBox(
+                    height: 10,
+                  ),
 
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: Colors.grey[400],
-                ),
-              ],
-            ),
-          ],
+                  Icon(
+                    Icons.arrow_forward_ios,
+
+                    size: 14,
+
+                    color:
+                        Colors.grey[400],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

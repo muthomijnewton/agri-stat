@@ -2,63 +2,150 @@ import 'package:flutter/material.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
+
   final String value;
+
   final IconData icon;
+
   final Color backgroundColor;
 
   const StatCard({
     super.key,
+
     required this.title,
+
     required this.value,
+
     required this.icon,
-    this.backgroundColor = const Color(0xFF2E7D32),
+
+    this.backgroundColor =
+        const Color(0xFF2E7D32),
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(
+    BuildContext context,
+  ) {
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
+
+    return AnimatedContainer(
+      duration:
+          const Duration(
+        milliseconds: 250,
+      ),
+
+      padding:
+          const EdgeInsets.all(
+        18,
+      ),
+
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark
+            ? const Color(
+                0xFF1E1E1E,
+              )
+            : Colors.white,
+
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          )
+            color: Colors.black
+                .withValues(
+              alpha: 0.06,
+            ),
+
+            blurRadius: 14,
+
+            offset:
+                const Offset(0, 6),
+          ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
         children: [
+          // ICON
+
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: backgroundColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+            width: 50,
+
+            height: 50,
+
+            decoration:
+                BoxDecoration(
+              color: backgroundColor
+                  .withValues(
+                alpha: 0.15,
+              ),
+
+              borderRadius:
+                  BorderRadius.circular(
+                14,
+              ),
             ),
-            child: Icon(icon, color: backgroundColor, size: 26),
+
+            child: Icon(
+              icon,
+
+              size: 28,
+
+              color:
+                  backgroundColor,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const Spacer(),
+
+          // VALUE
 
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+
+            maxLines: 1,
+
+            overflow:
+                TextOverflow
+                    .ellipsis,
+
+            style:
+                const TextStyle(
+              fontSize: 28,
+
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: 6,
+          ),
+
+          // TITLE
 
           Text(
             title,
+
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 13,
+              fontSize: 14,
+
+              fontWeight:
+                  FontWeight.w500,
+
+              color: isDark
+
+                  ? Colors.grey[400]
+
+                  : Colors.grey[700],
             ),
           ),
         ],

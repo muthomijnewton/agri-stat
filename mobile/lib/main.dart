@@ -26,22 +26,35 @@ class AgriculturalStatApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'AgriStat Dashboard',
+
       debugShowCheckedModeBanner: false,
+
       theme: AppTheme.light,
+
       darkTheme: AppTheme.dark,
+
       themeMode: ThemeMode.system,
 
       home: FutureBuilder<bool>(
         future: authService.isLoggedIn(),
+
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+              body: Center(
+                child:
+                    CircularProgressIndicator(),
+              ),
             );
           }
 
-          final loggedIn = snapshot.data ?? false;
-          return loggedIn ? const HomeScreen() : const LoginScreen();
+          final loggedIn =
+              snapshot.data ?? false;
+
+          return loggedIn
+              ? const HomeScreen()
+              : const LoginScreen();
         },
       ),
     );
@@ -52,102 +65,170 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() =>
+      _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class _HomeScreenState
+    extends State<HomeScreen> {
+  final ApiService _apiService =
+      ApiService();
 
-  final ApiService _apiService = ApiService();
+  int _selectedIndex = 0;
 
   int _unreadCount = 0;
 
-  final List<String> _titles = const [
-    "Dashboard",
-    "Products",
-    "Transactions",
-    "Forecasts",
-    "Insights",
-    "Notifications",
+  final List<String> _titles =
+      const [
+    'Dashboard',
+
+    'Products',
+
+    'Transactions',
+
+    'Forecasts',
+
+    'Insights',
+
+    'Notifications',
   ];
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    ProductsScreen(),
-    TransactionsScreen(),
-    ForecastsScreen(),
-    RecommendationsScreen(),
-    NotificationsScreen(),                                                                                                                                                                                                                                                            
-  ];
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+
+    _screens = const [
+      DashboardScreen(),
+
+      ProductsScreen(),
+
+      TransactionsScreen(),
+
+      ForecastsScreen(),
+
+      RecommendationsScreen(),
+
+      NotificationsScreen(),
+    ];
+
     _loadNotifications();
   }
 
-  Future<void> _loadNotifications() async {
-  final count =
-      await _apiService.getUnreadNotificationCount();
+  // ======================
+  // NOTIFICATIONS
+  // ======================
 
-  if (!mounted) return;
+  Future<void>
+      _loadNotifications() async {
+    try {
+      final count =
+          await _apiService
+              .getUnreadNotificationCount();
 
-  setState(() {
-    _unreadCount = count;
-  });
-}
+      if (!mounted) return;
 
-  void _refresh() {
+      setState(() {
+        _unreadCount = count;
+      });
+    } catch (_) {}
+  }
+
+  // ======================
+  // REFRESH
+  // ======================
+
+  Future<void> _refresh() async {
+    await _loadNotifications();
+
+    if (!mounted) return;
+
     setState(() {});
-    _loadNotifications();
   }
 
-  void _openNotifications() {
+  // ======================
+  // OPEN NOTIFICATIONS
+  // ======================
+
+  Future<void>
+      _openNotifications() async {
     setState(() {
       _selectedIndex = 5;
     });
-  }
 
-  Widget _getScreen(int index) {
-    return _screens[index];
+    await _loadNotifications();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget build(
+    BuildContext context,
+  ) {
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("🌾 ${_titles[_selectedIndex]}"),
+        title: Text(
+          '🌾 ${_titles[_selectedIndex]}',
+        ),
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(
+              Icons.refresh,
+            ),
+
             onPressed: _refresh,
           ),
 
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: _openNotifications,
+                icon: const Icon(
+                  Icons.notifications_none,
+                ),
+
+                onPressed:
+                    _openNotifications,
               ),
 
               if (_unreadCount > 0)
                 Positioned(
                   right: 6,
+
                   top: 6,
+
                   child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
+                    padding:
+                        const EdgeInsets.all(
+                      5,
                     ),
+
+                    decoration:
+                        const BoxDecoration(
+                      color: Colors.red,
+
+                      shape:
+                          BoxShape.circle,
+                    ),
+
                     child: Text(
-                      _unreadCount > 9 ? "9+" : "$_unreadCount",
-                      style: const TextStyle(
-                        color: Colors.white,
+                      _unreadCount > 9
+                          ? '9+'
+                          : '$_unreadCount',
+
+                      style:
+                          const TextStyle(
+                        color:
+                            Colors.white,
+
                         fontSize: 10,
-                        fontWeight: FontWeight.bold,
+
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
                   ),
@@ -157,48 +238,105 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: _getScreen(_selectedIndex),
+      // ======================
+      // KEEP ALL SCREENS ALIVE
+      // ======================
+
+      body: IndexedStack(
+        index: _selectedIndex,
+
+        children: _screens,
       ),
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
+      // ======================
+      // BOTTOM NAVIGATION
+      // ======================
+
+      bottomNavigationBar:
+          NavigationBar(
+        selectedIndex:
+            _selectedIndex,
+
+        onDestinationSelected:
+            (index) {
+          setState(() {
+            _selectedIndex =
+                index;
+          });
         },
-        backgroundColor: isDark ? Colors.black : Colors.white,
+
+        backgroundColor:
+            isDark
+                ? Colors.black
+                : Colors.white,
 
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: "Home",
+            icon: Icon(
+              Icons.dashboard_outlined,
+            ),
+
+            selectedIcon:
+                Icon(Icons.dashboard),
+
+            label: 'Home',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: "Products",
+            icon: Icon(
+              Icons.inventory_2_outlined,
+            ),
+
+            selectedIcon:
+                Icon(Icons.inventory_2),
+
+            label: 'Products',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: "Transactions",
+            icon: Icon(
+              Icons.receipt_long_outlined,
+            ),
+
+            selectedIcon:
+                Icon(
+                  Icons.receipt_long,
+                ),
+
+            label: 'Transactions',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.show_chart_outlined),
-            selectedIcon: Icon(Icons.show_chart),
-            label: "Forecasts",
+            icon: Icon(
+              Icons.show_chart_outlined,
+            ),
+
+            selectedIcon:
+                Icon(Icons.show_chart),
+
+            label: 'Forecasts',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.lightbulb_outline),
-            selectedIcon: Icon(Icons.lightbulb),
-            label: "Insights",
+            icon: Icon(
+              Icons.lightbulb_outline,
+            ),
+
+            selectedIcon:
+                Icon(Icons.lightbulb),
+
+            label: 'Insights',
           ),
+
           NavigationDestination(
-            icon: Icon(Icons.notifications_none),
-            selectedIcon: Icon(Icons.notifications),
-            label: "Alerts",
+            icon: Icon(
+              Icons.notifications_none,
+            ),
+
+            selectedIcon:
+                Icon(Icons.notifications),
+
+            label: 'Alerts',
           ),
         ],
       ),
