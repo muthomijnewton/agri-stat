@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     TransactionsScreen(),
     ForecastsScreen(),
     RecommendationsScreen(),
-    NotificationsScreen(), // ✅ FIXED (NO SERVICE)
+    NotificationsScreen(),                                                                                                                                                                                                                                                            
   ];
 
   @override

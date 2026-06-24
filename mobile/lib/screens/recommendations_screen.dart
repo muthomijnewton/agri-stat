@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/api_service.dart';
 import '../widgets/recommendation_card.dart';
 
@@ -10,137 +11,309 @@ class RecommendationsScreen extends StatefulWidget {
       _RecommendationsScreenState();
 }
 
-class _RecommendationsScreenState extends State<RecommendationsScreen> {
-  final ApiService _apiService = ApiService();
+class _RecommendationsScreenState
+    extends State<RecommendationsScreen> {
+  final ApiService _apiService =
+      ApiService();
 
   bool _isLoading = true;
+
   bool _actionLoading = false;
 
+  bool _hasError = false;
+
   List<dynamic> _recommendations = [];
+
+  String _selectedStatus = 'all';
+
+  DateTime? _lastUpdated;
 
   @override
   void initState() {
     super.initState();
+
     _loadRecommendations();
   }
+
+  // ==========================
+  // SAFE CONVERTERS
+  // ==========================
 
   int _toInt(dynamic value) {
     if (value == null) return 0;
 
     if (value is int) return value;
 
-    if (value is double) return value.toInt();
+    if (value is num) {
+      return value.toInt();
+    }
 
     if (value is String) {
-      return int.tryParse(value) ?? 0;
+      return int.tryParse(
+            value,
+          ) ??
+          0;
     }
 
     return 0;
   }
 
-  String _toStringValue(dynamic value) {
-    if (value == null) return '';
+  String _toStringValue(
+    dynamic value,
+  ) {
+    if (value == null) {
+      return '';
+    }
 
     return value.toString();
   }
 
-  Future<void> _loadRecommendations() async {
-    try {
-      setState(() => _isLoading = true);
+  // ==========================
+  // LOAD DATA
+  // ==========================
 
-      final data = await _apiService.getRecommendations();
+  Future<void>
+      _loadRecommendations() async {
+    try {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+
+          _hasError = false;
+        });
+      }
+
+      final data =
+          await _apiService
+              .getRecommendations();
+
+      if (!mounted) return;
 
       setState(() {
-        _recommendations = (data as List?) ?? [];
+        _recommendations =
+            data;
+
+        _lastUpdated =
+            DateTime.now();
+
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (!mounted) return;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error loading recommendations: $e',
-            ),
+      setState(() {
+        _hasError = true;
+
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error: $e',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
-  Future<void> _approve(int id) async {
+  // ==========================
+  // FILTER
+  // ==========================
+
+  List<dynamic>
+      get _filteredRecommendations {
+    if (_selectedStatus ==
+        'all') {
+      return _recommendations;
+    }
+
+    return _recommendations
+        .where(
+          (r) =>
+              _toStringValue(
+                r['status'],
+              ) ==
+              _selectedStatus,
+        )
+        .toList();
+  }
+
+  // ==========================
+  // COUNTS
+  // ==========================
+
+  int _countByStatus(
+    String status,
+  ) {
+    return _recommendations
+        .where(
+          (r) =>
+              _toStringValue(
+                r['status'],
+              ) ==
+              status,
+        )
+        .length;
+  }
+
+  // ==========================
+  // APPROVE
+  // ==========================
+
+  Future<void> _approve(
+    int id,
+  ) async {
     try {
-      setState(() => _actionLoading = true);
+      setState(() {
+        _actionLoading = true;
+      });
 
-      await _apiService.approveRecommendation(id);
+      await _apiService
+          .approveRecommendation(
+        id,
+      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recommendation approved'),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Recommendation approved',
           ),
-        );
-      }
+        ),
+      );
 
       await _loadRecommendations();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Approve failed: $e'),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Approve failed: $e',
           ),
-        );
-      }
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _actionLoading = false);
+        setState(() {
+          _actionLoading =
+              false;
+        });
       }
     }
   }
 
-  Future<void> _implement(int id) async {
+  // ==========================
+  // IMPLEMENT
+  // ==========================
+
+  Future<void> _implement(
+    int id,
+  ) async {
     try {
-      setState(() => _actionLoading = true);
+      setState(() {
+        _actionLoading = true;
+      });
 
-      await _apiService.implementRecommendation(id);
+      await _apiService
+          .implementRecommendation(
+        id,
+      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recommendation implemented'),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Recommendation implemented',
           ),
-        );
-      }
+        ),
+      );
 
       await _loadRecommendations();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Implement failed: $e'),
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Implement failed: $e',
           ),
-        );
-      }
+        ),
+      );
     } finally {
       if (mounted) {
-        setState(() => _actionLoading = false);
+        setState(() {
+          _actionLoading =
+              false;
+        });
       }
     }
   }
+
+  // ==========================
+  // BUILD
+  // ==========================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child:
+            CircularProgressIndicator(),
       );
     }
 
-    if (_recommendations.isEmpty) {
-      return const Center(
-        child: Text(
-          'No recommendations found',
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment
+                  .center,
+
+          children: [
+            const Icon(
+              Icons.error_outline,
+
+              size: 70,
+            ),
+
+            const SizedBox(
+              height: 16,
+            ),
+
+            const Text(
+              'Unable to load recommendations',
+            ),
+
+            const SizedBox(
+              height: 16,
+            ),
+
+            ElevatedButton(
+              onPressed:
+                  _loadRecommendations,
+
+              child:
+                  const Text(
+                'Retry',
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -148,52 +321,277 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     return Stack(
       children: [
         RefreshIndicator(
-          onRefresh: _loadRecommendations,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: _recommendations.length,
-            itemBuilder: (context, index) {
-              final rec = _recommendations[index] ?? {};
+          onRefresh:
+              _loadRecommendations,
 
-              final id = _toInt(rec['id']);
+          child: ListView(
+            padding:
+                const EdgeInsets.all(
+              12,
+            ),
 
-              final productId =
-                  _toStringValue(rec['product_id']);
+            children: [
+              const Text(
+                'AI Recommendations',
 
-              final quantity =
-                  _toInt(rec['recommended_quantity']);
+                style: TextStyle(
+                  fontSize: 22,
 
-              final status =
-                  _toStringValue(rec['status']);
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
 
-              return RecommendationCard(
-                id: id,
+              const SizedBox(
+                height: 16,
+              ),
 
-                productName: 'Product $productId',
+              // ==================
+              // COUNTERS
+              // ==================
 
-                recommendedQuantity: quantity,
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      child:
+                          Padding(
+                        padding:
+                            const EdgeInsets.all(
+                          12,
+                        ),
 
-                status: status.isEmpty
-                    ? 'pending'
-                    : status,
+                        child:
+                            Column(
+                          children: [
+                            const Text(
+                              'Pending',
+                            ),
 
-                onApprove: status == 'pending'
-                    ? () => _approve(id)
-                    : null,
+                            Text(
+                              '${_countByStatus('pending')}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
 
-                onImplement: status == 'approved'
-                    ? () => _implement(id)
-                    : null,
-              );
-            },
+                  Expanded(
+                    child: Card(
+                      child:
+                          Padding(
+                        padding:
+                            const EdgeInsets.all(
+                          12,
+                        ),
+
+                        child:
+                            Column(
+                          children: [
+                            const Text(
+                              'Approved',
+                            ),
+
+                            Text(
+                              '${_countByStatus('approved')}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: Card(
+                      child:
+                          Padding(
+                        padding:
+                            const EdgeInsets.all(
+                          12,
+                        ),
+
+                        child:
+                            Column(
+                          children: [
+                            const Text(
+                              'Done',
+                            ),
+
+                            Text(
+                              '${_countByStatus('implemented')}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(
+                height: 16,
+              ),
+
+              // ==================
+              // FILTER CHIPS
+              // ==================
+
+              SingleChildScrollView(
+                scrollDirection:
+                    Axis.horizontal,
+
+                child: Row(
+                  children: [
+                    'all',
+
+                    'pending',
+
+                    'approved',
+
+                    'implemented',
+                  ].map(
+                    (status) {
+                      return Padding(
+                        padding:
+                            const EdgeInsets.only(
+                          right: 8,
+                        ),
+
+                        child:
+                            ChoiceChip(
+                          label:
+                              Text(
+                            status
+                                .toUpperCase(),
+                          ),
+
+                          selected:
+                              _selectedStatus ==
+                                  status,
+
+                          onSelected:
+                              (_) {
+                            setState(
+                              () {
+                                _selectedStatus =
+                                    status;
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ).toList(),
+                ),
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+
+              if (_lastUpdated !=
+                  null)
+                Align(
+                  alignment:
+                      Alignment
+                          .centerRight,
+
+                  child: Text(
+                    'Updated ${_lastUpdated!.hour}:${_lastUpdated!.minute.toString().padLeft(2, '0')}',
+                  ),
+                ),
+
+              const SizedBox(
+                height: 16,
+              ),
+
+              if (_filteredRecommendations
+                  .isEmpty)
+                const Center(
+                  child: Padding(
+                    padding:
+                        EdgeInsets.all(
+                      30,
+                    ),
+
+                    child: Text(
+                      'No recommendations found',
+                    ),
+                  ),
+                ),
+
+              ..._filteredRecommendations
+                  .map(
+                (rec) {
+                  final id =
+                      _toInt(
+                    rec['id'],
+                  );
+
+                  final productId =
+                      _toStringValue(
+                    rec['product_id'],
+                  );
+
+                  final quantity =
+                      _toInt(
+                    rec['recommended_quantity'],
+                  );
+
+                  final status =
+                      _toStringValue(
+                    rec['status'],
+                  );
+
+                  return RecommendationCard(
+                    id: id,
+
+                    productName:
+                        'Product $productId',
+
+                    recommendedQuantity:
+                        quantity,
+
+                    status:
+                        status.isEmpty
+                            ? 'pending'
+                            : status,
+
+                    onApprove:
+                        status ==
+                                'pending'
+                            ? () =>
+                                _approve(
+                                  id,
+                                )
+                            : null,
+
+                    onImplement:
+                        status ==
+                                'approved'
+                            ? () =>
+                                _implement(
+                                  id,
+                                )
+                            : null,
+                  );
+                },
+              ),
+            ],
           ),
         ),
 
         if (_actionLoading)
           Container(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black
+                .withValues(
+              alpha: 0.2,
+            ),
+
             child: const Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(),
             ),
           ),
       ],

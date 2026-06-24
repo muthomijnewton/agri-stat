@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
-import '../utils/type_safety.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -244,7 +243,9 @@ class ApiService {
 
 Future<List<dynamic>> getNotifications() async {
   try {
-    final response = await _dio.get('/notifications/');
+    final response = await Dio().get(
+      'https://agric-stat-dash-1.onrender.com/notifications/',
+    );
 
     final data = response.data;
 
@@ -261,8 +262,9 @@ Future<List<dynamic>> getNotifications() async {
 
 Future<int> getUnreadNotificationCount() async {
   try {
-    final response =
-        await _dio.get('/notifications/unread-count');
+    final response = await Dio().get(
+      'https://agric-stat-dash-1.onrender.com/notifications/unread-count',
+    );
 
     final data = response.data;
 
@@ -275,7 +277,9 @@ Future<int> getUnreadNotificationCount() async {
 
 Future<bool> markNotificationRead(int id) async {
   try {
-    await _dio.patch('/notifications/$id/read');
+    await Dio().patch(
+      'https://agric-stat-dash-1.onrender.com/notifications/$id/read',
+    );
 
     return true;
   } catch (e) {
@@ -286,7 +290,9 @@ Future<bool> markNotificationRead(int id) async {
 
 Future<bool> markAllNotificationsRead() async {
   try {
-    await _dio.patch('/notifications/read-all');
+    await Dio().patch(
+      'https://agric-stat-dash-1.onrender.com/notifications/read-all',
+    );
 
     return true;
   } catch (e) {
@@ -294,7 +300,6 @@ Future<bool> markAllNotificationsRead() async {
     return false;
   }
 }
-
   // ==========================
   // HEALTH CHECK
   // ==========================
