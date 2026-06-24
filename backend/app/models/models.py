@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, N
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
+from datetime import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -93,3 +94,14 @@ class InventoryRecommendation(Base):
     
     # Relationships
     product = relationship("Product", back_populates="inventory_recommendations")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    type = Column(String, default="info")  # info, warning, danger, success
+    read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
