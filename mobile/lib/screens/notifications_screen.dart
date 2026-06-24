@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../services/notification_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -16,12 +15,13 @@ class _NotificationsScreenState
   final NotificationService service =
       NotificationService();
 
-  List<AppNotification>
-      notifications = [];
+  List<AppNotification> notifications = [];
 
   bool loading = true;
 
   bool hasError = false;
+
+  bool refreshing = false;
 
   DateTime? lastUpdated;
 
@@ -33,23 +33,26 @@ class _NotificationsScreenState
   }
 
   // ==========================
-  // LOAD
+  // LOAD NOTIFICATIONS
   // ==========================
 
-  Future<void>
-      loadNotifications() async {
+  Future<void> loadNotifications() async {
+
+    if (refreshing) return;
+
+    refreshing = true;
+
     try {
+
       if (mounted) {
         setState(() {
           loading = true;
-
           hasError = false;
         });
       }
 
       final data =
-          await service
-              .getNotifications();
+          await service.getNotifications();
 
       if (!mounted) return;
 
@@ -58,16 +61,23 @@ class _NotificationsScreenState
 
         loading = false;
 
+        hasError = false;
+
         lastUpdated =
             DateTime.now();
       });
+
     } catch (e) {
+
       if (!mounted) return;
 
       setState(() {
+
         loading = false;
 
         hasError = true;
+
+        notifications = [];
       });
 
       ScaffoldMessenger.of(
@@ -79,6 +89,10 @@ class _NotificationsScreenState
           ),
         ),
       );
+
+    } finally {
+
+      refreshing = false;
     }
   }
 
@@ -87,6 +101,7 @@ class _NotificationsScreenState
   // ==========================
 
   int get unreadCount {
+
     return notifications
         .where(
           (n) => !n.read,
@@ -95,6 +110,7 @@ class _NotificationsScreenState
   }
 
   int get warningCount {
+
     return notifications
         .where(
           (n) =>
@@ -105,6 +121,7 @@ class _NotificationsScreenState
   }
 
   int get dangerCount {
+
     return notifications
         .where(
           (n) =>
@@ -121,17 +138,23 @@ class _NotificationsScreenState
   Color _getColor(
     AppNotification n,
   ) {
+
     switch (n.type) {
+
       case 'danger':
+
         return Colors.red;
 
       case 'warning':
+
         return Colors.orange;
 
       case 'success':
+
         return Colors.green;
 
       default:
+
         return Colors.blue;
     }
   }
@@ -144,25 +167,35 @@ class _NotificationsScreenState
   Widget build(
     BuildContext context,
   ) {
+
+    // LOADING
+
     if (loading) {
+
       return const Center(
         child:
             CircularProgressIndicator(),
       );
     }
 
+    // ERROR
+
     if (hasError) {
+
       return Center(
         child: Column(
+
           mainAxisAlignment:
-              MainAxisAlignment
-                  .center,
+              MainAxisAlignment.center,
 
           children: [
+
             const Icon(
               Icons.error_outline,
 
               size: 70,
+
+              color: Colors.red,
             ),
 
             const SizedBox(
@@ -171,17 +204,26 @@ class _NotificationsScreenState
 
             const Text(
               'Unable to load notifications',
+
+              style: TextStyle(
+                fontSize: 16,
+              ),
             ),
 
             const SizedBox(
               height: 16,
             ),
 
-            ElevatedButton(
+            ElevatedButton.icon(
+
               onPressed:
                   loadNotifications,
 
-              child:
+              icon: const Icon(
+                Icons.refresh,
+              ),
+
+              label:
                   const Text(
                 'Retry',
               ),
@@ -192,10 +234,12 @@ class _NotificationsScreenState
     }
 
     return RefreshIndicator(
+
       onRefresh:
           loadNotifications,
 
       child: ListView(
+
         padding:
             const EdgeInsets.all(
           12,
@@ -204,14 +248,16 @@ class _NotificationsScreenState
         children: [
 
           // ==================
-          // TITLE
+          // HEADER
           // ==================
 
           const Text(
+
             'Notifications',
 
             style: TextStyle(
-              fontSize: 22,
+
+              fontSize: 24,
 
               fontWeight:
                   FontWeight.bold,
@@ -227,23 +273,43 @@ class _NotificationsScreenState
           // ==================
 
           Row(
+
             children: [
+
               Expanded(
                 child: Card(
+
                   child: Padding(
+
                     padding:
                         const EdgeInsets.all(
                       12,
                     ),
 
                     child: Column(
+
                       children: [
+
                         const Text(
                           'Unread',
                         ),
 
+                        const SizedBox(
+                          height: 6,
+                        ),
+
                         Text(
+
                           '$unreadCount',
+
+                          style:
+                              const TextStyle(
+
+                            fontSize: 22,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -253,20 +319,38 @@ class _NotificationsScreenState
 
               Expanded(
                 child: Card(
+
                   child: Padding(
+
                     padding:
                         const EdgeInsets.all(
                       12,
                     ),
 
                     child: Column(
+
                       children: [
+
                         const Text(
                           'Warnings',
                         ),
 
+                        const SizedBox(
+                          height: 6,
+                        ),
+
                         Text(
+
                           '$warningCount',
+
+                          style:
+                              const TextStyle(
+
+                            fontSize: 22,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -276,20 +360,38 @@ class _NotificationsScreenState
 
               Expanded(
                 child: Card(
+
                   child: Padding(
+
                     padding:
                         const EdgeInsets.all(
                       12,
                     ),
 
                     child: Column(
+
                       children: [
+
                         const Text(
                           'Danger',
                         ),
 
+                        const SizedBox(
+                          height: 6,
+                        ),
+
                         Text(
+
                           '$dangerCount',
+
+                          style:
+                              const TextStyle(
+
+                            fontSize: 22,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -303,14 +405,26 @@ class _NotificationsScreenState
             height: 12,
           ),
 
-          if (lastUpdated !=
-              null)
+          // ==================
+          // LAST UPDATED
+          // ==================
+
+          if (lastUpdated != null)
+
             Align(
+
               alignment:
                   Alignment.centerRight,
 
               child: Text(
+
                 'Updated ${lastUpdated!.hour}:${lastUpdated!.minute.toString().padLeft(2, '0')}',
+
+                style:
+                    const TextStyle(
+
+                  color: Colors.grey,
+                ),
               ),
             ),
 
@@ -326,15 +440,39 @@ class _NotificationsScreenState
               .isEmpty)
 
             const Padding(
+
               padding:
                   EdgeInsets.all(
                 30,
               ),
 
-              child: Center(
-                child: Text(
-                  'No notifications',
-                ),
+              child: Column(
+
+                children: [
+
+                  Icon(
+
+                    Icons.notifications_off,
+
+                    size: 60,
+
+                    color: Colors.grey,
+                  ),
+
+                  SizedBox(
+                    height: 12,
+                  ),
+
+                  Text(
+
+                    'No notifications',
+
+                    style: TextStyle(
+
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -343,15 +481,28 @@ class _NotificationsScreenState
           // ==================
 
           ...notifications.map(
+
             (n) {
+
               return Card(
+
+                color: n.read
+
+                    ? null
+
+                    : Colors.orange.withValues(
+                        alpha: 0.08,
+                      ),
+
                 margin:
                     const EdgeInsets.symmetric(
                   vertical: 6,
                 ),
 
                 child: ListTile(
+
                   leading: Icon(
+
                     Icons.notifications,
 
                     color:
@@ -359,13 +510,18 @@ class _NotificationsScreenState
                   ),
 
                   title: Text(
+
                     n.title,
 
                     style:
                         TextStyle(
+
                       fontWeight:
+
                           n.read
+
                               ? FontWeight.normal
+
                               : FontWeight.bold,
                     ),
                   ),
@@ -376,16 +532,20 @@ class _NotificationsScreenState
                   ),
 
                   trailing: Icon(
+
                     n.read
+
                         ? Icons.check_circle
 
                         : Icons.fiber_new,
 
-                    color: n.read
+                    color:
 
-                        ? Colors.grey
+                        n.read
 
-                        : Colors.orange,
+                            ? Colors.grey
+
+                            : Colors.orange,
                   ),
                 ),
               );
