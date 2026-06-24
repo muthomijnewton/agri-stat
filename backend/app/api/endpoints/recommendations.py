@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.models import InventoryRecommendation
+from app.models.models import (
+    InventoryRecommendation,
+    Notification,
+)
 from app.schemas.schemas import InventoryRecommendationCreate, InventoryRecommendationUpdate, InventoryRecommendationResponse
 from typing import List
 from datetime import date
@@ -46,16 +49,40 @@ def get_product_recommendations(product_id: int, db: Session = Depends(get_db)):
     ).order_by(InventoryRecommendation.recommendation_date.desc()).all()
     return recommendations
 
-@router.post("/", response_model=InventoryRecommendationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=InventoryRecommendationResponse,
+    status_code=status.HTTP_201_CREATED
+)
 def create_recommendation(
     recommendation: InventoryRecommendationCreate,
     db: Session = Depends(get_db)
 ):
     """Create a new inventory recommendation"""
-    db_recommendation = InventoryRecommendation(**recommendation.dict())
+
+    # Create recommendation
+    db_recommendation = InventoryRecommendation(
+        **recommendation.dict()
+    )
+
     db.add(db_recommendation)
+
     db.commit()
+
     db.refresh(db_recommendation)
+
+    # Create notification automatically
+    notification = Notification(
+        title="New Recommendation",
+        message=f"Recommendation #{db_recommendation.id} created",
+        type="info",
+        read=False,
+    )
+
+    db.add(notification)
+
+    db.commit()
+
     return db_recommendation
 
 @router.put("/{recommendation_id}", response_model=InventoryRecommendationResponse)
