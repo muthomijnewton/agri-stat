@@ -7,6 +7,7 @@ import 'screens/transactions_screen.dart';
 import 'screens/forecasts_screen.dart';
 import 'screens/recommendations_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/profile_screen.dart';
 
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
@@ -79,19 +80,14 @@ class _HomeScreenState
   int _unreadCount = 0;
 
   final List<String> _titles =
-      const [
-    'Dashboard',
-
-    'Products',
-
-    'Transactions',
-
-    'Forecasts',
-
-    'Insights',
-
-    'Notifications',
-  ];
+    const [
+  'Dashboard',
+  'Products',
+  'Transactions',
+  'Forecasts',
+  'Insights',
+  'Notifications',
+];
 
   late final List<Widget> _screens;
 
@@ -100,18 +96,13 @@ class _HomeScreenState
     super.initState();
 
     _screens = const [
-      DashboardScreen(),
-
-      ProductsScreen(),
-
-      TransactionsScreen(),
-
-      ForecastsScreen(),
-
-      RecommendationsScreen(),
-
-      NotificationsScreen(),
-    ];
+  DashboardScreen(),
+  ProductsScreen(),
+  TransactionsScreen(),
+  ForecastsScreen(),
+  RecommendationsScreen(),
+  NotificationsScreen(),
+];
 
     _loadNotifications();
   }
@@ -176,169 +167,62 @@ class _HomeScreenState
         ),
 
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.refresh,
+  IconButton(
+    icon: const Icon(
+      Icons.refresh,
+    ),
+    onPressed: _refresh,
+  ),
+
+  Stack(
+    children: [
+      IconButton(
+        icon: const Icon(
+          Icons.notifications_none,
+        ),
+        onPressed: _openNotifications,
+      ),
+
+      if (_unreadCount > 0)
+        Positioned(
+          right: 6,
+          top: 6,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
             ),
-
-            onPressed: _refresh,
-          ),
-
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_none,
-                ),
-
-                onPressed:
-                    _openNotifications,
+            child: Text(
+              _unreadCount > 9
+                  ? '9+'
+                  : '$_unreadCount',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
-
-              if (_unreadCount > 0)
-                Positioned(
-                  right: 6,
-
-                  top: 6,
-
-                  child: Container(
-                    padding:
-                        const EdgeInsets.all(
-                      5,
-                    ),
-
-                    decoration:
-                        const BoxDecoration(
-                      color: Colors.red,
-
-                      shape:
-                          BoxShape.circle,
-                    ),
-
-                    child: Text(
-                      _unreadCount > 9
-                          ? '9+'
-                          : '$_unreadCount',
-
-                      style:
-                          const TextStyle(
-                        color:
-                            Colors.white,
-
-                        fontSize: 10,
-
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-
-      // ======================
-      // KEEP ALL SCREENS ALIVE
-      // ======================
-
-      body: IndexedStack(
-        index: _selectedIndex,
-
-        children: _screens,
-      ),
-
-      // ======================
-      // BOTTOM NAVIGATION
-      // ======================
-
-      bottomNavigationBar:
-          NavigationBar(
-        selectedIndex:
-            _selectedIndex,
-
-        onDestinationSelected:
-            (index) {
-          setState(() {
-            _selectedIndex =
-                index;
-          });
-        },
-
-        backgroundColor:
-            isDark
-                ? Colors.black
-                : Colors.white,
-
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(
-              Icons.dashboard_outlined,
             ),
-
-            selectedIcon:
-                Icon(Icons.dashboard),
-
-            label: 'Home',
           ),
+        ),
+    ],
+  ),
 
-          NavigationDestination(
-            icon: Icon(
-              Icons.inventory_2_outlined,
-            ),
-
-            selectedIcon:
-                Icon(Icons.inventory_2),
-
-            label: 'Products',
-          ),
-
-          NavigationDestination(
-            icon: Icon(
-              Icons.receipt_long_outlined,
-            ),
-
-            selectedIcon:
-                Icon(
-                  Icons.receipt_long,
-                ),
-
-            label: 'Transactions',
-          ),
-
-          NavigationDestination(
-            icon: Icon(
-              Icons.show_chart_outlined,
-            ),
-
-            selectedIcon:
-                Icon(Icons.show_chart),
-
-            label: 'Forecasts',
-          ),
-
-          NavigationDestination(
-            icon: Icon(
-              Icons.lightbulb_outline,
-            ),
-
-            selectedIcon:
-                Icon(Icons.lightbulb),
-
-            label: 'Insights',
-          ),
-
-          NavigationDestination(
-            icon: Icon(
-              Icons.notifications_none,
-            ),
-
-            selectedIcon:
-                Icon(Icons.notifications),
-
-            label: 'Alerts',
-          ),
-        ],
+  IconButton(
+    icon: const Icon(
+      Icons.person_outline,
+    ),
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              const ProfileScreen(),
+        ),
+      );
+    },
+  ),
+],
       ),
     );
   }

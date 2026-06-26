@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'add_product_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/product_card.dart';
 
@@ -283,103 +284,102 @@ class _ProductsScreenState
             ),
           ),
 
-          const SizedBox(
-            height: 10,
+          const SizedBox(height: 10),
+
+Padding(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 16,
+  ),
+  child: SizedBox(
+    width: double.infinity,
+    child: ElevatedButton.icon(
+      onPressed: () {
+        final result = Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) =>
+        const AddProductScreen(),
+  ),
+);
+
+if (result == true) {
+  _loadProducts();
+}
+      },
+      icon: const Icon(Icons.add),
+      label: const Text(
+        'Add Product',
+      ),
+    ),
+  ),
+),
+
+const SizedBox(height: 10),
+
+Expanded(
+  child: _filteredProducts.isEmpty
+      ? Center(
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.inventory_2_outlined,
+                size: 70,
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              Text(
+                _search.isEmpty
+                    ? "No products available"
+                    : "No matching products",
+              ),
+            ],
           ),
+        )
+      : ListView.builder(
+          padding:
+              const EdgeInsets.all(12),
+          itemCount:
+              _filteredProducts.length,
+          itemBuilder:
+              (context, index) {
+            try {
+              final product =
+                  _filteredProducts[index];
 
-          // ==================
-          // EMPTY STATE
-          // ==================
-
-          Expanded(
-            child: _filteredProducts
-                    .isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .center,
-
-                      children: [
-                        const Icon(
-                          Icons.inventory_2_outlined,
-                          size: 70,
-                        ),
-
-                        const SizedBox(
-                          height: 16,
-                        ),
-
-                        Text(
-                          _search
-                                  .isEmpty
-                              ? "No products available"
-
-                              : "No matching products",
-                        ),
-                      ],
-                    ),
-                  )
-
-                // ==================
-                // PRODUCT LIST
-                // ==================
-
-                : ListView.builder(
-                    padding:
-                        const EdgeInsets.all(
-                      12,
-                    ),
-
-                    itemCount:
-                        _filteredProducts
-                            .length,
-
-                    itemBuilder:
-                        (
-                      context,
-                      index,
-                    ) {
-                      try {
-                        final product =
-                            _filteredProducts[
-                                index];
-
-                        return ProductCard(
-                          id:
-                              product['id'] ??
-                                  0,
-
-                          name:
-                              product['name'] ??
-                                  'No name',
-
-                          category:
-                              product['category'] ??
-                                  'Uncategorized',
-
-                          price:
-                              _parsePrice(
-                            product[
-                                'unit_price'],
-                          ),
-
-                          unit:
-                              product['unit'] ??
-                                  '',
-                        );
-                      } catch (e) {
-                        return const Card(
-                          child: ListTile(
-                            title: Text(
-                              'Invalid product data',
-                            ),
-                          ),
-                        );
-                      }
-                    },
+              return ProductCard(
+                id:
+                    product['id'] ?? 0,
+                name:
+                    product['name'] ??
+                        'No name',
+                category:
+                    product['category'] ??
+                        'Uncategorized',
+                price:
+                    _parsePrice(
+                  product[
+                      'unit_price'],
+                ),
+                unit:
+                    product['unit'] ??
+                        '',
+              );
+            } catch (e) {
+              return const Card(
+                child: ListTile(
+                  title: Text(
+                    'Invalid product data',
                   ),
-          ),
+                ),
+              );
+            }
+          },
+        ),
+),
+
         ],
       ),
     );
