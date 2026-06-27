@@ -16,8 +16,11 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_event():
-    """Create database tables and seed demo data when the app starts."""
-    Base.metadata.create_all(bind=engine)
+    """
+    Seed default/demo data.
+
+    Database schema is managed exclusively by Alembic migrations.
+    """
     add_default_user()
     add_sample_data()
 

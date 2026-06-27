@@ -6,20 +6,104 @@ from datetime import datetime
 
 class User(Base):
     __tablename__ = "users"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(80), unique=True, nullable=False, index=True)
-    email = Column(String(120), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
-    full_name = Column(String(255))
-    is_admin = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relationships
-    transactions = relationship("Transaction", back_populates="user")
 
+    id = Column(Integer, primary_key=True, index=True)
+
+    # ==========================
+    # ACCOUNT INFORMATION
+    # ==========================
+
+    username = Column(String(80), unique=True, nullable=False, index=True)
+
+    email = Column(String(120), unique=True, nullable=False)
+
+    password = Column(String(255), nullable=False)
+
+    full_name = Column(String(255))
+
+    phone = Column(String(30))
+
+    profile_photo = Column(String(255), nullable=True)
+
+    # ==========================
+    # BUSINESS INFORMATION
+    # ==========================
+
+    business_name = Column(String(255))
+
+    business_type = Column(
+        String(100),
+        default="Farmer",
+    )
+
+    # ==========================
+    # LOCATION
+    # ==========================
+
+    country = Column(
+        String(100),
+        default="Kenya",
+    )
+
+    county = Column(String(100))
+
+    sub_county = Column(String(100))
+
+    village = Column(String(100))
+
+    # ==========================
+    # FARM INFORMATION
+    # ==========================
+
+    farm_size = Column(String(100))
+
+    primary_crop = Column(String(100))
+
+    primary_livestock = Column(String(100))
+
+    # ==========================
+    # PREFERENCES
+    # ==========================
+
+    currency = Column(
+        String(10),
+        default="KES",
+    )
+
+    bio = Column(Text)
+
+    # ==========================
+    # ACCOUNT STATUS
+    # ==========================
+
+    is_admin = Column(
+        Boolean,
+        default=False,
+    )
+
+    is_active = Column(
+        Boolean,
+        default=True,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        onupdate=func.now(),
+    )
+
+    # ==========================
+    # RELATIONSHIPS
+    # ==========================
+
+    transactions = relationship(
+        "Transaction",
+        back_populates="user",
+    )
 
 class Product(Base):
     __tablename__ = "products"
