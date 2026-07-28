@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useNav
 
 import { AuthProvider, useAuth } from './context/AuthContext'
 import RequireAuth from './components/RequireAuth'
+import NotificationBell from './components/NotificationBell'
+import NotificationBell from './components/NotificationBell'
 
 import Dashboard       from './pages/Dashboard'
 import Products        from './pages/Products'
@@ -139,6 +141,7 @@ function Navbar() {
       </ul>
 
       <div className="nav-user">
+        <NotificationBell />
         {user && (
           <span className="nav-username">
             <IconUser />
