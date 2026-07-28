@@ -12,7 +12,7 @@ from app.api.routes import api_router
 from app.db.database import engine, Base
 import app.models.models  # noqa: F401 – registers all ORM models
 
-from init_db import add_default_user, add_sample_data
+from init_db import init_database, add_default_user, add_sample_data
 
 
 @asynccontextmanager
@@ -20,9 +20,10 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan handler (replaces deprecated @app.on_event).
 
-    Startup: seed default user and sample data on first boot.
-    Database schema is managed exclusively by Alembic migrations.
+    Startup: create tables if they don't exist, then seed default user and
+    sample data on first boot.
     """
+    init_database()   # creates all tables (no-op if they already exist)
     add_default_user()
     add_sample_data()
     yield

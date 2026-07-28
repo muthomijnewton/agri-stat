@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useNav
 import { AuthProvider, useAuth } from './context/AuthContext'
 import RequireAuth from './components/RequireAuth'
 import NotificationBell from './components/NotificationBell'
-import NotificationBell from './components/NotificationBell'
 
 import Dashboard       from './pages/Dashboard'
 import Products        from './pages/Products'
@@ -12,6 +11,7 @@ import Forecasts       from './pages/Forecasts'
 import Recommendations from './pages/Recommendations'
 import Analytics       from './pages/Analytics'
 import Login           from './pages/Login'
+import Profile         from './pages/Profile'
 
 import './css/App.css'
 
@@ -138,15 +138,20 @@ function Navbar() {
             <IconBarChart2 /><span>Analytics</span>
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/profile">
+            <IconUser /><span>Profile</span>
+          </NavLink>
+        </li>
       </ul>
 
       <div className="nav-user">
         <NotificationBell />
         {user && (
-          <span className="nav-username">
+          <Link to="/profile" className="nav-username" title="View profile">
             <IconUser />
             {user.username}
-          </span>
+          </Link>
         )}
         <button className="btn-logout" onClick={handleLogout}>Sign out</button>
       </div>
@@ -175,6 +180,7 @@ function AppLayout() {
           <Route path="/forecasts"       element={<RequireAuth><Forecasts /></RequireAuth>} />
           <Route path="/recommendations" element={<RequireAuth><Recommendations /></RequireAuth>} />
           <Route path="/analytics"       element={<RequireAuth><Analytics /></RequireAuth>} />
+          <Route path="/profile"         element={<RequireAuth><Profile /></RequireAuth>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

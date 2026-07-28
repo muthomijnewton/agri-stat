@@ -1,177 +1,228 @@
-# React Frontend - Agricultural Statistics Dashboard
+# Web Frontend
 
-Modern React web application for the Agricultural Statistics Dashboard system.
+React single-page application for AgricStat Dash. Communicates with the FastAPI backend via a REST API.
 
-## Features
+For project-level setup instructions see [GET_STARTED.md](../GET_STARTED.md).  
+For the backend, see [backend/README.md](../backend/README.md).  
+For deployment, see [DEPLOYMENT.md](../DEPLOYMENT.md).
 
-- 📊 **Dashboard** - Real-time statistics and overview
-- 🌾 **Products Management** - Add, edit, and manage agricultural products
-- 📈 **Transactions** - Record and track sales transactions
-- 📉 **Forecasts** - View AI-powered demand predictions
-- 💡 **Recommendations** - Intelligent inventory stock level recommendations
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+---
 
-## Tech Stack
+## Table of Contents
 
-- **React 18** - Modern UI library
-- **Vite** - Fast build tool and dev server
-- **React Router DOM** - Client-side routing
-- **Axios** - HTTP client for API communication
-- **Recharts** - Data visualization (optional)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Setup](#setup)
+- [Environment Variables](#environment-variables)
+- [Pages and Features](#pages-and-features)
+- [API Integration](#api-integration)
+- [Authentication](#authentication)
+- [Styling](#styling)
+- [Build and Preview](#build-and-preview)
+
+---
+
+## Technology Stack
+
+| Package          | Version   | Purpose                           |
+|------------------|-----------|-----------------------------------|
+| React            | 18.2      | UI library                        |
+| Vite             | 5         | Build tool and dev server         |
+| React Router DOM | 6.18      | Client-side routing               |
+| Axios            | 1.6       | HTTP client                       |
+| Recharts         | 2.10      | Chart components                  |
+
+No additional icon libraries or UI component frameworks are used. All icons are inline SVG defined in the component files.
+
+---
+
+## Project Structure
+
+```
+web/
+├── index.html
+├── vite.config.js          Vite config; dev proxy for /api -> localhost:8000
+├── package.json
+├── .env.example
+└── src/
+    ├── main.jsx            React DOM entry point
+    ├── App.jsx             Router, layout, navigation bar, route definitions
+    ├── context/
+    │   └── AuthContext.jsx JWT token storage, user state, login/logout
+    ├── services/
+    │   └── api.js          Axios instance, all API helpers, CSV export utility,
+    │                       401 interceptor (auto-redirect to /login)
+    ├── components/
+    │   ├── RequireAuth.jsx Redirect to /login if not authenticated
+    │   ├── NotificationBell.jsx  Unread notification count + dropdown
+    │   └── Paginator.jsx   Reusable pagination control
+    ├── pages/
+    │   ├── Login.jsx
+    │   ├── Dashboard.jsx
+    │   ├── Products.jsx
+    │   ├── Transactions.jsx
+    │   ├── Forecasts.jsx
+    │   ├── Recommendations.jsx
+    │   ├── Analytics.jsx
+    │   └── Profile.jsx
+    └── css/
+        ├── index.css       Global reset and CSS variable definitions
+        ├── App.css         Navigation bar, layout, footer
+        ├── pages.css       Shared page styles (cards, tables, forms, badges,
+        │                   charts, paginator, low-stock banner)
+        └── profile.css     Profile page-specific styles
+```
+
+---
 
 ## Setup
-
-### Installation
 
 ```bash
 cd web
 npm install
-```
-
-### Development
-
-```bash
 npm run dev
 ```
 
-The app will start at `http://localhost:5173`
+The dev server starts at `http://localhost:5173`. API requests to `/api/*` are proxied to `http://localhost:8000` by `vite.config.js`, so no CORS configuration is needed during local development.
 
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
+---
 
 ## Environment Variables
 
-Create a `.env` file in the `web` directory:
-
-```env
-REACT_APP_API_URL=http://localhost:8000/api
-```
-
-Or copy from the example:
+Create `web/.env` by copying `web/.env.example`:
 
 ```bash
 cp .env.example .env
 ```
 
-## Project Structure
+```env
+VITE_API_URL=http://localhost:8000/api
+```
 
+Only variables prefixed with `VITE_` are exposed to the browser bundle by Vite. The `api.js` service file reads this value:
+
+```js
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 ```
-src/
-├── pages/              # Page components
-│   ├── Dashboard.jsx   # Main dashboard
-│   ├── Products.jsx    # Product management
-│   ├── Transactions.jsx    # Transaction records
-│   ├── Forecasts.jsx   # Demand forecasts
-│   └── Recommendations.jsx  # Inventory recommendations
-├── components/         # Reusable components
-├── services/          # API integration
-│   └── api.js         # Axios instance and API calls
-├── css/               # Stylesheets
-├── App.jsx            # Main app component
-└── main.jsx           # React DOM render
-```
+
+For a Vercel deployment, set `VITE_API_URL` in the Vercel dashboard to point to the Render backend URL.
+
+---
+
+## Pages and Features
+
+### Login (`/login`)
+
+JWT login form. On success, the token and user object are stored in `localStorage` via `AuthContext`. Authenticated users are redirected to `/`.
+
+### Dashboard (`/`)
+
+- KPI cards: total products, total transactions, active forecasts, pending/approved/implemented recommendations
+- Low-stock alert banner: lists products where current quantity is below minimum stock level (derived from recommendation data)
+- Daily revenue bar chart (last 30 days)
+- Revenue by product pie chart (last 30 days)
+- Platform overview and getting-started guide
+
+### Products (`/products`)
+
+- Paginated product table
+- Add product form (name, category, unit, price, current quantity, min/max quantity)
+- Soft delete with confirmation dialog
+
+### Transactions (`/transactions`)
+
+- Paginated transaction table with filters: product, transaction type (sale/purchase), date range
+- Add transaction form
+- CSV export (filtered or full)
+
+### Forecasts (`/forecasts`)
+
+- Paginated forecast table with product filter
+- Per-forecast detail: model used (Prophet or ARIMA), forecast date, predicted demand, confidence interval (lower/upper), MAPE accuracy
+- Generate forecast for a single product or all products
+- CSV export
+
+### Recommendations (`/recommendations`)
+
+- Generate recommendation for a single product or all products (batch generate with per-product result log)
+- Filter by status: pending, approved, implemented
+- Recommendation cards showing: recommended quantity, current quantity, min/max stock, reason
+- Status transitions: pending -> Approve -> approved -> Mark as Implemented -> implemented
+- Delete (pending or implemented)
+- CSV export
+
+### Analytics (`/analytics`)
+
+- Daily transaction trend (line chart)
+- Transaction type split: sales vs purchases (bar or pie chart)
+- Top products by quantity
+- Forecast accuracy trend
+
+### Profile (`/profile`)
+
+- View and update username, email, full name, organization, location, role
+- Change password form (requires current password)
+
+---
 
 ## API Integration
 
-The app connects to the FastAPI backend at `http://localhost:8000/api` by default.
+All API calls are defined in `src/services/api.js`. The file exports:
 
-### Key API Endpoints
+| Export                | Purpose                                              |
+|-----------------------|------------------------------------------------------|
+| `api` (default)       | Configured Axios instance, used for ad-hoc calls     |
+| `productsAPI`         | getAll, getById, create, update, delete              |
+| `transactionsAPI`     | getAll, create, update, delete                       |
+| `forecastsAPI`        | getAll, getById, create, update, delete, generate, generateAll |
+| `recommendationsAPI`  | getAll, getById, create, approve, implement, delete, generate, generateAll |
+| `notificationsAPI`    | getAll, unreadCount, markRead, markAllRead           |
+| `authAPI`             | login, getProfile, updateProfile                     |
+| `statsAPI`            | summary, transactionsDaily, revenueByProduct, transactionTypeSplit, forecastAccuracyTrend, recommendationStatusBreakdown, topProductsByQuantity |
+| `exportsAPI`          | transactions, forecasts, recommendations (CSV download) |
+| `exportCSV`           | Low-level CSV download helper                        |
 
-- `GET /api/products` - List all products
-- `POST /api/products` - Create new product
-- `GET /api/transactions` - List transactions
-- `POST /api/transactions` - Record transaction
-- `GET /api/forecasts` - View forecasts
-- `GET /api/recommendations` - View recommendations
+A response interceptor handles 401 responses globally: it clears stored credentials and redirects to `/login`.
 
-## Quick Start
+---
 
-1. **Start the backend:**
-   ```bash
-   cd backend
-   ./run_backend.sh
-   ```
+## Authentication
 
-2. **Install and start the frontend:**
-   ```bash
-   cd web
-   npm install
-   npm run dev
-   ```
+`AuthContext` manages authentication state. On login, the JWT token is stored in `localStorage` under `agristat_token`. The Axios instance adds the `Authorization: Bearer <token>` header to every request via a request interceptor.
 
-3. **Open browser:**
-   Navigate to `http://localhost:5173`
+`RequireAuth` wraps protected routes. If `isAuthenticated` is false, it redirects to `/login` and preserves the originally requested path for post-login redirect.
 
-## Features in Detail
-
-### Dashboard
-- Overview statistics
-- Quick links to all modules
-- System information
-
-### Products
-- Add new agricultural products
-- Set prices and units
-- View all product inventory
-
-### Transactions
-- Record sales and purchases
-- Track by date range
-- Calculate totals automatically
-
-### Forecasts
-- View AI-generated demand predictions
-- Filter by product
-- See confidence intervals
-
-### Recommendations
-- Get optimal stock level suggestions
-- Approve recommendations
-- Mark as implemented
-- Track recommendation workflow
+---
 
 ## Styling
 
-The application uses:
-- **CSS Grid** for responsive layouts
-- **CSS Variables** for theming
-- **Dark and light** color schemes
-- Mobile-first responsive design
+Styles are plain CSS using custom properties (CSS variables) defined in `css/index.css`. No CSS framework or preprocessor is used.
 
-### Color Scheme
+Key variables:
 
-- Primary: Green (#2ecc71) - for success and primary actions
-- Secondary: Blue (#3498db) - for secondary information
-- Warning: Orange (#f39c12) - for pending items
-- Danger: Red (#e74c3c) - for destructive actions
+```css
+--brand-600: #16a34a;   /* primary green */
+--brand-700: #15803d;
+--gray-100 through --gray-900
+--radius-sm, --radius, --radius-lg
+--shadow-sm, --shadow, --shadow-lg
+```
 
-## Browser Support
+Badge classes (`badge-success`, `badge-warning`, `badge-info`, `badge-secondary`) and button classes (`btn-primary`, `btn-secondary`, `btn-danger`) are defined in `pages.css` and used across all page components.
 
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Mobile browsers
+---
 
-## Contributing
+## Build and Preview
 
-For development:
+```bash
+# Development server (with HMR)
+npm run dev
 
-1. Create a feature branch
-2. Make changes
-3. Test thoroughly
-4. Commit and push
-5. Create a pull request
+# Production build → web/dist/
+npm run build
 
-## License
+# Preview production build locally
+npm run preview
+```
 
-University of Eastern Africa, Baraton - Senior Project
-Student: Newton Jones Muthomi (SNEWJO2011)
+The production build outputs static files to `web/dist/`. Deploy this directory to any static host (Vercel, Netlify, S3, GitHub Pages).

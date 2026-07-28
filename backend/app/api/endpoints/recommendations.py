@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.models import InventoryRecommendation, Notification, User
+from app.models.models import InventoryRecommendation, Notification, Product, User
 from app.schemas.schemas import (
     InventoryRecommendationCreate,
     InventoryRecommendationUpdate,
     InventoryRecommendationResponse,
 )
 from app.core.security import get_current_user
+from app.services.forecasting import ForecastingService
 from typing import List
+from datetime import date
 
 router = APIRouter(prefix="/api/recommendations", tags=["inventory-recommendations"])
 
@@ -192,3 +194,145 @@ def delete_recommendation(
 
     db.delete(rec)
     db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Generate endpoints
+# ---------------------------------------------------------------------------
+
+@router.post("/generate/{product_id}", status_code=status.HTTP_201_CREATED)
+def generate_recommendation(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """
+    Generate an inventory recommendation for a single product using the
+    latest forecast data.  Creates a new 'pending' recommendation and a
+    matching notification.
+    """
+    product = db.query(Product).filter(
+        Product.id == product_id,
+        Product.is_active == True,  # noqa: E712
+    ).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    result = ForecastingService.calculate_inventory_recommendation(db, product_id)
+
+    if result["recommended_quantity"] == 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot generate recommendation for '{product.name}': no forecasts available. "
+                   "Generate a forecast first.",
+        )
+
+    rec = InventoryRecommendation(
+        product_id=product_id,
+        recommended_quantity=result["recommended_quantity"],
+        recommendation_date=date.today(),
+        reason=result["reason"],
+        status="pending",
+    )
+    db.add(rec)
+    db.flush()
+
+    db.add(Notification(
+        title="New Recommendation Generated",
+        message=(
+            f"Recommendation for '{product.name}': "
+            f"stock {result['recommended_quantity']} units "
+            f"(avg daily demand {result.get('average_daily_demand', '?')})"
+        ),
+        type="info",
+        read=False,
+    ))
+    db.commit()
+    db.refresh(rec)
+
+    return {
+        "message": f"Recommendation generated for '{product.name}'",
+        "recommendation_id": rec.id,
+        "recommended_quantity": rec.recommended_quantity,
+        "reason": rec.reason,
+    }
+
+
+@router.post("/generate-all", status_code=status.HTTP_200_OK)
+def generate_all_recommendations(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """
+    Generate inventory recommendations for every active product that has
+    at least one forecast.  Products with no forecasts are skipped.
+    Returns a per-product summary identical in shape to the batch forecast
+    response so the frontend can reuse the same log UI.
+    """
+    products = db.query(Product).filter(Product.is_active == True).all()  # noqa: E712
+
+    results = []
+    succeeded = skipped = failed = 0
+
+    for product in products:
+        try:
+            result = ForecastingService.calculate_inventory_recommendation(db, product.id)
+
+            if result["recommended_quantity"] == 0:
+                results.append({
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "status": "skipped",
+                    "message": "No forecasts available — generate a forecast first",
+                })
+                skipped += 1
+                continue
+
+            rec = InventoryRecommendation(
+                product_id=product.id,
+                recommended_quantity=result["recommended_quantity"],
+                recommendation_date=date.today(),
+                reason=result["reason"],
+                status="pending",
+            )
+            db.add(rec)
+            db.flush()
+
+            db.add(Notification(
+                title="Recommendation Generated",
+                message=(
+                    f"'{product.name}': stock {result['recommended_quantity']} units"
+                ),
+                type="info",
+                read=False,
+            ))
+
+            results.append({
+                "product_id": product.id,
+                "product_name": product.name,
+                "status": "success",
+                "message": f"Recommended quantity: {result['recommended_quantity']} units",
+                "recommended_quantity": result["recommended_quantity"],
+            })
+            succeeded += 1
+
+        except Exception as exc:
+            results.append({
+                "product_id": product.id,
+                "product_name": product.name,
+                "status": "error",
+                "message": str(exc),
+            })
+            failed += 1
+
+    db.commit()
+
+    return {
+        "summary": {
+            "total_products": len(products),
+            "succeeded": succeeded,
+            "skipped": skipped,
+            "failed": failed,
+        },
+        "results": results,
+    }

@@ -1,0 +1,126 @@
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+
+/* ── Header card ── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Avatar circle with initials */
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  background-color: var(--brand-600);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 0 4px var(--brand-100);
+}
+
+.profile-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-header-info h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-header-info p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 0.625rem;
+}
+
+.profile-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+}
+
+.profile-header-meta span {
+  background-color: var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.5rem;
+}
+
+/* "Member since" block pushed to the right */
+.profile-header-since {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Section cards ── */
+.profile-section {
+  margin-bottom: 1.25rem;
+  padding: 1.5rem;
+}
+
+.profile-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.profile-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background-color: var(--brand-50);
+  flex-shrink: 0;
+}
+
+.profile-section-icon svg {
+  width: 16px;
+  height: 16px;
+  color: var(--brand-600);
+}
+
+/* ── Save row ── */
+.profile-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-header-since {
+    text-align: left;
+  }
+}

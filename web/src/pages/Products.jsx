@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { productsAPI } from '../services/api'
+import Paginator from '../components/Paginator'
 import '../css/pages.css'
 
 /* ---- Icons ---- */
@@ -41,6 +42,14 @@ function IconCheck() {
   )
 }
 
+function IconSearch() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 15, height: 15 }}>
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  )
+}
+
 const EMPTY_FORM = { name: '', category: '', description: '', unit_price: '', unit: '' }
 
 export default function Products() {
@@ -49,10 +58,21 @@ export default function Products() {
   const [error,      setError]      = useState(null)
   const [successMsg, setSuccessMsg] = useState(null)
   const [showForm,   setShowForm]   = useState(false)
-  const [editingId,  setEditingId]  = useState(null)   // null = adding new
+  const [editingId,  setEditingId]  = useState(null)
   const [formData,   setFormData]   = useState(EMPTY_FORM)
 
+  // Search & filter
+  const [search,          setSearch]          = useState('')
+  const [categoryFilter,  setCategoryFilter]  = useState('')
+
+  // Pagination
+  const [page,     setPage]     = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   useEffect(() => { fetchProducts() }, [])
+
+  // Reset to page 1 whenever search or category filter changes
+  useEffect(() => { setPage(1) }, [search, categoryFilter])
 
   const fetchProducts = async () => {
     try {
@@ -132,6 +152,17 @@ export default function Products() {
 
   if (loading && products.length === 0) return <div className="loading">Loading products…</div>
 
+  // Derived list after search + category filter
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort()
+  const filtered = products.filter(p => {
+    const matchName = p.name.toLowerCase().includes(search.toLowerCase())
+    const matchCat  = !categoryFilter || p.category === categoryFilter
+    return matchName && matchCat
+  })
+
+  // Paginated slice
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+
   return (
     <div className="container">
       <div className="page-header">
@@ -188,6 +219,49 @@ export default function Products() {
         </form>
       )}
 
+      {/* ── Search & Filter bar ── */}
+      {!showForm && (
+        <div className="card filters" style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Name search */}
+          <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
+            <span style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none' }}>
+              <IconSearch />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by name…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ paddingLeft: '2rem', width: '100%' }}
+            />
+          </div>
+
+          {/* Category filter */}
+          <div style={{ flex: '1', minWidth: '160px' }}>
+            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+              <option value="">All categories</option>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          {/* Result count + clear */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              {filtered.length} of {products.length} products
+            </span>
+            {(search || categoryFilter) && (
+              <button
+                className="btn-secondary"
+                style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem' }}
+                onClick={() => { setSearch(''); setCategoryFilter('') }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Table ── */}
       <div className="table-responsive">
         <table className="card">
@@ -201,7 +275,7 @@ export default function Products() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {paginated.map((product) => (
               <tr key={product.id} className={editingId === product.id ? 'row-editing' : ''}>
                 <td>{product.name}</td>
                 <td>{product.category || '—'}</td>
@@ -229,11 +303,22 @@ export default function Products() {
             ))}
           </tbody>
         </table>
+        <Paginator
+          total={filtered.length}
+          page={page}
+          pageSize={pageSize}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
       </div>
 
-      {products.length === 0 && !loading && (
+      {filtered.length === 0 && !loading && (
         <div className="card text-center">
-          <p className="text-muted">No products found. Add one to get started.</p>
+          <p className="text-muted">
+            {search || categoryFilter
+              ? 'No products match your search.'
+              : 'No products found. Add one to get started.'}
+          </p>
         </div>
       )}
     </div>

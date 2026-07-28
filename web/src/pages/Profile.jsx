@@ -328,44 +328,52 @@ export default function Profile() {
         {pwError   && <div className="error"  style={{ marginBottom: '1rem' }}>{pwError}</div>}
         {pwSuccess && <div className="success" style={{ marginBottom: '1rem' }}>{pwSuccess}</div>}
         <form onSubmit={handlePasswordChange}>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Current Password *</label>
+          <div className="form-row" style={{ alignItems: 'flex-end', gap: '0.75rem' }}>
+            <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
+              <label style={{ fontSize: '0.78rem' }}>Current Password *</label>
               <input
                 type="password"
                 value={pwForm.current_password}
                 onChange={(e) => setPwForm((p) => ({ ...p, current_password: e.target.value }))}
                 required
                 autoComplete="current-password"
+                style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem' }}
               />
             </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>New Password *</label>
+            <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
+              <label style={{ fontSize: '0.78rem' }}>New Password *</label>
               <input
                 type="password"
                 value={pwForm.new_password}
                 onChange={(e) => setPwForm((p) => ({ ...p, new_password: e.target.value }))}
                 required
                 autoComplete="new-password"
-                placeholder="Min. 6 characters"
+                placeholder="Min. 6 chars"
+                style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem' }}
               />
             </div>
-            <div className="form-group">
-              <label>Confirm New Password *</label>
+            <div className="form-group" style={{ flex: 1, minWidth: 0 }}>
+              <label style={{ fontSize: '0.78rem' }}>Confirm New Password *</label>
               <input
                 type="password"
                 value={pwForm.confirm_password}
                 onChange={(e) => setPwForm((p) => ({ ...p, confirm_password: e.target.value }))}
                 required
                 autoComplete="new-password"
+                style={{ padding: '0.35rem 0.6rem', fontSize: '0.85rem' }}
               />
             </div>
+            <div className="form-group" style={{ flexShrink: 0 }}>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={savingPw}
+                style={{ padding: '0.38rem 0.9rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+              >
+                <IconLock /> {savingPw ? 'Changing…' : 'Change Password'}
+              </button>
+            </div>
           </div>
-          <button type="submit" className="btn-primary" disabled={savingPw}>
-            <IconLock /> {savingPw ? 'Changing…' : 'Change Password'}
-          </button>
         </form>
       </ProfileSection>
     </div>

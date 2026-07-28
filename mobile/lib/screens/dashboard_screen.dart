@@ -34,63 +34,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // SMART INSIGHTS ENGINE
   // ==========================
 
-  Map<String, dynamic> _generateInsights(
-    List<dynamic> data,
-  ) {
+  /// Derives a human-readable insight from the transaction-type-split data.
+  /// Each item has shape: { type, count, revenue, quantity }
+  Map<String, dynamic> _generateInsights(List<dynamic> data) {
     if (data.isEmpty) {
       return {
-        "message": "No data available yet.",
+        "message": "No transaction data available yet.",
         "top": null,
         "low": null,
       };
     }
 
-    final sorted = [...data];
-
-    sorted.sort(
-      (a, b) => TypeSafety.toDouble(
-        b['total'],
-      ).compareTo(
-        TypeSafety.toDouble(a['total']),
-      ),
-    );
+    // Sort by revenue descending
+    final sorted = [...data]
+      ..sort((a, b) => TypeSafety.toDouble(b['revenue'])
+          .compareTo(TypeSafety.toDouble(a['revenue'])));
 
     final top = sorted.first;
-
     final low = sorted.last;
 
-    final total = data.fold<double>(
+    final totalRevenue = data.fold<double>(
       0,
-      (sum, item) =>
-          sum + TypeSafety.toDouble(item['total']),
+      (sum, item) => sum + TypeSafety.toDouble(item['revenue']),
     );
 
-    final topShare = total == 0
-        ? 0
-        : (TypeSafety.toDouble(
-                  top['total'],
-                ) /
-                total) *
-            100;
+    final topRevenue = TypeSafety.toDouble(top['revenue']);
+    final topShare = totalRevenue == 0 ? 0.0 : (topRevenue / totalRevenue) * 100;
+    final topType = (top['type']?.toString() ?? 'unknown').toLowerCase();
 
     String message;
-
-    if (topShare > 60) {
-      message =
-          "High dependency on ${top['category']}. Consider diversification.";
-    } else if (topShare > 40) {
-      message =
-          "${top['category']} is performing strongly.";
+    if (topShare > 75) {
+      message = 'Revenue is heavily dominated by ${topType}s (${ topShare.toStringAsFixed(0)}%).';
+    } else if (topShare > 50) {
+      message = '${topType.substring(0, 1).toUpperCase()}${topType.substring(1)}s account for more than half of revenue.';
     } else {
-      message =
-          "Sales are well distributed.";
+      message = 'Revenue is balanced across transaction types.';
     }
 
-    return {
-      "message": message,
-      "top": top,
-      "low": low,
-    };
+    return {"message": message, "top": top, "low": low};
   }
 
   // ==========================
@@ -108,80 +89,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final results = await Future.wait([
         _apiService.getProducts(),
-
         _apiService.getTransactions(),
-
         _apiService.getForecasts(),
-
         _apiService.getRecommendations(),
-
-        _apiService.fetchSummary(),
+        _apiService.fetchTransactionTypeSplit(),
       ]);
 
-      final products = results[0] as List? ?? [];
+      final products        = results[0] as List? ?? [];
+      final transactions    = results[1] as List? ?? [];
+      final forecasts       = results[2] as List? ?? [];
+      final recommendations = results[3] as List? ?? [];
 
-      final transactions =
-          results[1] as List? ?? [];
+      // fetchTransactionTypeSplit returns: [{ type, count, revenue, quantity }, ...]
+      final typeSplit = results[4] as List? ?? [];
 
-      final forecasts =
-          results[2] as List? ?? [];
+      final pendingRecs = recommendations.where(
+        (r) => r['status'] == 'pending',
+      ).length;
 
-      final recommendations =
-          results[3] as List? ?? [];
-
-      final summary =
-          results[4] as List? ?? [];
-
-      final pendingRecs =
-          recommendations.where(
-            (r) =>
-                r['status'] == 'pending',
-          ).length;
-
-      final totalRevenue =
-          transactions.fold<double>(
+      // Sum revenue across all types from the stats endpoint
+      final totalRevenue = typeSplit.fold<double>(
         0,
-        (sum, item) =>
-            sum +
-            TypeSafety.toDouble(
-              item['total_price'],
-            ),
+        (sum, item) => sum + TypeSafety.toDouble(item['revenue']),
+      );
+
+      final totalTxCount = typeSplit.fold<int>(
+        0,
+        (sum, item) => sum + TypeSafety.toInt(item['count']),
       );
 
       final avgTransaction =
-          transactions.isEmpty
-              ? 0
-              : totalRevenue /
-                  transactions.length;
+          totalTxCount == 0 ? 0.0 : totalRevenue / totalTxCount;
 
       if (!mounted) return;
 
       setState(() {
-        _summaryData = summary;
+        // Pass type-split data to the chart (replaces old /transactions/summary)
+        _summaryData = typeSplit;
 
         _stats = {
-          "totalProducts":
-              products.length,
-
-          "totalTransactions":
-              transactions.length,
-
-          "activeForecasts":
-              forecasts.length,
-
-          "pendingRecommendations":
-              pendingRecs,
-
-          "totalRevenue":
-              totalRevenue,
-
-          "avgTransaction":
-              avgTransaction,
+          "totalProducts":           products.length,
+          "totalTransactions":       transactions.length,
+          "activeForecasts":         forecasts.length,
+          "pendingRecommendations":  pendingRecs,
+          "totalRevenue":            totalRevenue,
+          "avgTransaction":          avgTransaction,
         };
 
-        _lastUpdated =
-            DateTime.now();
-
+        _lastUpdated = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {

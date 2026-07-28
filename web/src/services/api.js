@@ -53,13 +53,15 @@ export const forecastsAPI = {
 // Recommendations
 // ---------------------------------------------------------------------------
 export const recommendationsAPI = {
-  getAll:     (skip = 0, limit = 100, filters = {}) =>
+  getAll:      (skip = 0, limit = 100, filters = {}) =>
     api.get('/recommendations', { params: { skip, limit, ...filters } }),
-  getById:    (id)       => api.get(`/recommendations/${id}`),
-  create:     (data)     => api.post('/recommendations', data),
-  approve:    (id)       => api.patch(`/recommendations/${id}/approve`),
-  implement:  (id)       => api.patch(`/recommendations/${id}/implement`),
-  delete:     (id)       => api.delete(`/recommendations/${id}`),
+  getById:     (id)       => api.get(`/recommendations/${id}`),
+  create:      (data)     => api.post('/recommendations', data),
+  approve:     (id)       => api.patch(`/recommendations/${id}/approve`),
+  implement:   (id)       => api.patch(`/recommendations/${id}/implement`),
+  delete:      (id)       => api.delete(`/recommendations/${id}`),
+  generate:    (productId) => api.post(`/recommendations/generate/${productId}`),
+  generateAll: ()          => api.post('/recommendations/generate-all'),
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { transactionsAPI, productsAPI, exportsAPI } from '../services/api'
+import Paginator from '../components/Paginator'
 import '../css/pages.css'
 
 /* ---- Icons ---- */
@@ -51,6 +52,14 @@ function IconDownload() {
   )
 }
 
+function IconFilter() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 14, height: 14 }}>
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  )
+}
+
 const EMPTY_FORM = {
   product_id:       '',
   transaction_type: 'sale',
@@ -72,14 +81,31 @@ export default function Transactions() {
   const [formData,     setFormData]     = useState(EMPTY_FORM)
   const [exporting,    setExporting]    = useState(false)
 
-  useEffect(() => { fetchData() }, [])
+  // Filters (applied on fetch + export)
+  const [filterType,      setFilterType]      = useState('')   // '' | 'sale' | 'purchase'
+  const [filterProduct,   setFilterProduct]   = useState('')
+  const [filterStartDate, setFilterStartDate] = useState('')
+  const [filterEndDate,   setFilterEndDate]   = useState('')
+  // Track what's currently applied vs pending
+  const [appliedFilters,  setAppliedFilters]  = useState({})
 
-  const fetchData = async () => {
+  // Pagination
+  const [page,     setPage]     = useState(1)
+  const [pageSize, setPageSize] = useState(25)
+
+  useEffect(() => { fetchData({}) }, [])
+
+  const fetchData = async (filters = {}) => {
     try {
       setLoading(true)
       setError(null)
+      const params = {}
+      if (filters.product_id)   params.product_id   = filters.product_id
+      if (filters.start_date)   params.start_date   = filters.start_date
+      if (filters.end_date)     params.end_date     = filters.end_date
+      // transaction_type is client-side filtered (backend doesn't support it as a query param)
       const [txns, prods] = await Promise.all([
-        transactionsAPI.getAll(0, 100),
+        transactionsAPI.getAll(0, 500, params),
         productsAPI.getAll(0, 100),
       ])
       setTransactions(txns.data)
@@ -90,6 +116,37 @@ export default function Transactions() {
       setLoading(false)
     }
   }
+
+  const applyFilters = () => {
+    const f = {
+      product_id:   filterProduct   || undefined,
+      start_date:   filterStartDate || undefined,
+      end_date:     filterEndDate   || undefined,
+    }
+    setAppliedFilters({ ...f, transaction_type: filterType || undefined })
+    setPage(1)
+    fetchData(f)
+  }
+
+  const clearFilters = () => {
+    setFilterType('')
+    setFilterProduct('')
+    setFilterStartDate('')
+    setFilterEndDate('')
+    setAppliedFilters({})
+    setPage(1)
+    fetchData({})
+  }
+
+  // Derived: apply client-side type filter on top of server results
+  const filtered = filterType
+    ? transactions.filter(t => t.transaction_type === filterType)
+    : transactions
+
+  // Paginated slice
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+
+  const hasActiveFilters = filterType || filterProduct || filterStartDate || filterEndDate
 
   /* Open form pre-filled for editing */
   const startEdit = (txn) => {
@@ -143,7 +200,7 @@ export default function Transactions() {
         flash('Transaction recorded successfully.')
       }
       cancelEdit()
-      fetchData()
+      fetchData(appliedFilters)
     } catch (err) {
       setError(err.response?.data?.detail ?? err.message)
     }
@@ -154,7 +211,7 @@ export default function Transactions() {
     try {
       await transactionsAPI.delete(id)
       flash('Transaction deleted.')
-      fetchData()
+      fetchData(appliedFilters)
     } catch (err) {
       setError(err.response?.data?.detail ?? err.message)
     }
@@ -168,7 +225,11 @@ export default function Transactions() {
   const handleExport = async () => {
     try {
       setExporting(true)
-      await exportsAPI.transactions()
+      const f = {}
+      if (appliedFilters.product_id) f.product_id  = appliedFilters.product_id
+      if (appliedFilters.start_date) f.start_date   = appliedFilters.start_date
+      if (appliedFilters.end_date)   f.end_date     = appliedFilters.end_date
+      await exportsAPI.transactions(f)
     } catch (err) {
       setError(err.response?.data?.detail ?? err.message)
     } finally {
@@ -203,6 +264,74 @@ export default function Transactions() {
 
       {error      && <div className="error">{error}</div>}
       {successMsg && <div className="success">{successMsg}</div>}
+
+      {/* ── Advanced Filters ── */}
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <IconFilter />
+          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--gray-700)' }}>Filters</span>
+          {hasActiveFilters && (
+            <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>Active</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          {/* Type */}
+          <div className="form-group" style={{ marginBottom: 0, minWidth: '150px', flex: 1 }}>
+            <label>Type</label>
+            <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+              <option value="">All types</option>
+              <option value="sale">Sales only</option>
+              <option value="purchase">Purchases only</option>
+            </select>
+          </div>
+
+          {/* Product */}
+          <div className="form-group" style={{ marginBottom: 0, minWidth: '180px', flex: 2 }}>
+            <label>Product</label>
+            <select value={filterProduct} onChange={e => setFilterProduct(e.target.value)}>
+              <option value="">All products</option>
+              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+
+          {/* Start date */}
+          <div className="form-group" style={{ marginBottom: 0, minWidth: '150px', flex: 1 }}>
+            <label>From</label>
+            <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+          </div>
+
+          {/* End date */}
+          <div className="form-group" style={{ marginBottom: 0, minWidth: '150px', flex: 1 }}>
+            <label>To</label>
+            <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+            <button className="btn-primary" onClick={applyFilters} disabled={loading}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <IconFilter /> Apply
+            </button>
+            {hasActiveFilters && (
+              <button className="btn-secondary" onClick={clearFilters} style={{ fontSize: '0.85rem' }}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Active filter summary */}
+        {hasActiveFilters && (
+          <p style={{ marginTop: '0.625rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            Showing {filtered.length} of {transactions.length} transactions
+            {filterType ? ` · ${filterType}s` : ''}
+            {filterProduct ? ` · ${products.find(p => String(p.id) === String(filterProduct))?.name ?? ''}` : ''}
+            {filterStartDate ? ` · from ${filterStartDate}` : ''}
+            {filterEndDate   ? ` · to ${filterEndDate}` : ''}
+            {' '}— <em>Export CSV will use these filters</em>
+          </p>
+        )}
+      </div>
 
       {/* ── Add / Edit form ── */}
       {showForm && (
@@ -281,7 +410,7 @@ export default function Transactions() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((txn) => (
+            {paginated.map((txn) => (
               <tr key={txn.id} className={editingId === txn.id ? 'row-editing' : ''}>
                 <td>{getProductName(txn.product_id)}</td>
                 <td>
@@ -315,6 +444,13 @@ export default function Transactions() {
             ))}
           </tbody>
         </table>
+        <Paginator
+          total={filtered.length}
+          page={page}
+          pageSize={pageSize}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
       </div>
 
       {transactions.length === 0 && !loading && (

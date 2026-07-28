@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
-import api from '../services/api'
+import api, { recommendationsAPI, productsAPI } from '../services/api'
 import '../css/pages.css'
 
 /* ---- SVG icons ---- */
@@ -19,11 +19,20 @@ function IconTrendingUp() {
 function IconAlertCircle() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
 }
+function IconThumbsUp() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+}
+function IconCheckCircle() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+}
 function IconDatabase() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
 }
 function IconListOrdered() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+}
+function IconAlertTriangle() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 16, height: 16, flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 }
 
 /* ---- Pie chart colour palette ---- */
@@ -58,9 +67,10 @@ function shortDate(str) {
 }
 
 export default function Dashboard() {
-  const [stats,       setStats]       = useState({ total_products: 0, total_transactions: 0, total_forecasts: 0, pending_recommendations: 0 })
+  const [stats,       setStats]       = useState({ total_products: 0, total_transactions: 0, total_forecasts: 0, pending_recommendations: 0, approved_recommendations: 0, implemented_recommendations: 0 })
   const [dailyData,   setDailyData]   = useState([])
   const [productData, setProductData] = useState([])
+  const [lowStock,    setLowStock]    = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
 
@@ -69,14 +79,31 @@ export default function Dashboard() {
       try {
         setLoading(true)
         setError(null)
-        const [s, d, p] = await Promise.all([
+        const [s, d, p, recs, prods] = await Promise.all([
           api.get('/stats/summary'),
           api.get('/stats/transactions-daily?days=30'),
           api.get('/stats/revenue-by-product?days=30'),
+          recommendationsAPI.getAll(0, 100),
+          productsAPI.getAll(0, 100),
         ])
         setStats(s.data)
         setDailyData(d.data)
         setProductData(p.data)
+
+        // Flag recommendations where current stock is below minimum
+        const productMap = Object.fromEntries(prods.data.map(p => [p.id, p.name]))
+        const alerts = recs.data.filter(
+          r => r.min_quantity != null &&
+               r.current_quantity != null &&
+               r.current_quantity < r.min_quantity
+        ).map(r => ({
+          id:               r.id,
+          name:             productMap[r.product_id] ?? `Product #${r.product_id}`,
+          current_quantity: r.current_quantity,
+          min_quantity:     r.min_quantity,
+          status:           r.status,
+        }))
+        setLowStock(alerts)
       } catch (err) {
         setError(err.response?.data?.detail ?? err.message)
       } finally {
@@ -97,6 +124,32 @@ export default function Dashboard() {
           <p className="text-muted">Agricultural supply chain overview — last 30 days</p>
         </div>
       </div>
+
+      {/* ── Low Stock Alert Banner ── */}
+      {lowStock.length > 0 && (
+        <div className="low-stock-banner">
+          <div className="low-stock-banner__header">
+            <IconAlertTriangle />
+            <strong>{lowStock.length} product{lowStock.length > 1 ? 's' : ''} below minimum stock level</strong>
+          </div>
+          <ul className="low-stock-banner__list">
+            {lowStock.map(item => (
+              <li key={item.id} className="low-stock-banner__item">
+                <span className="low-stock-banner__name">{item.name}</span>
+                <span className="low-stock-banner__qty">
+                  {item.current_quantity} / {item.min_quantity} min
+                </span>
+                <span className={`badge ${item.status === 'pending' ? 'badge-warning' : item.status === 'approved' ? 'badge-info' : 'badge-success'}`}>
+                  {item.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <a href="/recommendations" className="low-stock-banner__link">
+            View Recommendations →
+          </a>
+        </div>
+      )}
 
       {/* ── KPI Cards ── */}
       <div className="stats-grid">
@@ -126,6 +179,20 @@ export default function Dashboard() {
           <div className="stat-card-body">
             <h3>{stats.pending_recommendations}</h3>
             <p>Pending Recommendations</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-icon blue"><IconThumbsUp /></div>
+          <div className="stat-card-body">
+            <h3>{stats.approved_recommendations}</h3>
+            <p>Approved Recommendations</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-icon green"><IconCheckCircle /></div>
+          <div className="stat-card-body">
+            <h3>{stats.implemented_recommendations}</h3>
+            <p>Implemented Recommendations</p>
           </div>
         </div>
       </div>

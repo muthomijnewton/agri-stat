@@ -293,18 +293,14 @@ Padding(
   child: SizedBox(
     width: double.infinity,
     child: ElevatedButton.icon(
-      onPressed: () {
-        final result = Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) =>
-        const AddProductScreen(),
-  ),
-);
-
-if (result == true) {
-  _loadProducts();
-}
+      onPressed: () async {
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AddProductScreen(),
+          ),
+        );
+        if (result == true) _loadProducts();
       },
       icon: const Icon(Icons.add),
       label: const Text(

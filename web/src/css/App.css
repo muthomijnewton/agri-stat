@@ -110,6 +110,15 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-700);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.nav-username:hover {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
 }
 
 .nav-username svg {
