@@ -45,6 +45,8 @@ export const forecastsAPI = {
   delete:           (id)              => api.delete(`/forecasts/${id}`),
   generate:         (productId, model = 'auto') =>
     api.post(`/forecasts/generate/${productId}`, null, { params: { model } }),
+  generateAll:      (model = 'auto') =>
+    api.post('/forecasts/generate-all', null, { params: { model } }),
 }
 
 // ---------------------------------------------------------------------------

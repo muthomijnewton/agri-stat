@@ -19,6 +19,24 @@ function IconZap() {
   )
 }
 
+function IconZapAll() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 14, height: 14 }}>
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      <line x1="20" y1="2" x2="20" y2="6" /><line x1="22" y1="4" x2="18" y2="4" />
+    </svg>
+  )
+}
+
+function IconChevron({ open }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+      style={{ width: 14, height: 14, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
 function IconBarChart() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 16, height: 16 }}>
@@ -59,6 +77,12 @@ export default function Forecasts() {
   const [genModel, setGenModel] = useState('auto')
   const [generating, setGenerating] = useState(false)
   const [exporting, setExporting] = useState(false)
+
+  // Batch generate state
+  const [batchOpen,    setBatchOpen]    = useState(false)
+  const [batchModel,   setBatchModel]   = useState('auto')
+  const [batchRunning, setBatchRunning] = useState(false)
+  const [batchResults, setBatchResults] = useState(null)  // null = not run yet
 
   useEffect(() => {
     fetchData()
@@ -124,6 +148,21 @@ export default function Forecasts() {
     }
   }
 
+  const handleGenerateAll = async () => {
+    try {
+      setBatchRunning(true)
+      setBatchResults(null)
+      setError(null)
+      const res = await forecastsAPI.generateAll(batchModel)
+      setBatchResults(res.data)
+      await fetchData()
+    } catch (err) {
+      setError(err.response?.data?.detail ?? err.message)
+    } finally {
+      setBatchRunning(false)
+    }
+  }
+
   if (loading && forecasts.length === 0)
     return <div className="loading">Loading forecasts...</div>
 
@@ -186,9 +225,120 @@ export default function Forecasts() {
         </form>
       </div>
 
+      {/* ── Batch Generate Panel ── */}
+      <div className="card" style={{ marginBottom: '1.25rem' }}>
+        {/* Collapsible header */}
+        <button
+          type="button"
+          onClick={() => setBatchOpen(o => !o)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: '0.9375rem', fontWeight: 600, color: 'var(--gray-800)',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <IconZapAll /> Generate All Products
+          </span>
+          <IconChevron open={batchOpen} />
+        </button>
+
+        {batchOpen && (
+          <div style={{ marginTop: '1rem' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              Run forecast generation for every active product in one click.
+              Products with insufficient history (&lt; 10 transactions) are skipped automatically.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ marginBottom: 0, minWidth: 220 }}>
+                <label>Model</label>
+                <select value={batchModel} onChange={e => setBatchModel(e.target.value)} disabled={batchRunning}>
+                  <option value="auto">Auto (Prophet → ARIMA fallback)</option>
+                  <option value="prophet">Prophet</option>
+                  <option value="arima">ARIMA</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleGenerateAll}
+                disabled={batchRunning}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                {batchRunning
+                  ? <><span className="spinner-inline" /> Running…</>
+                  : <><IconZapAll /> Generate All</>}
+              </button>
+              {batchResults && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setBatchResults(null)}
+                  style={{ fontSize: '0.8rem' }}
+                >
+                  Clear Log
+                </button>
+              )}
+            </div>
+
+            {/* Progress / results log */}
+            {batchRunning && !batchResults && (
+              <div className="batch-log" style={{ marginTop: '1rem' }}>
+                <p className="batch-log-running">⏳ Generating forecasts for all products — this may take a moment…</p>
+              </div>
+            )}
+
+            {batchResults && (
+              <div style={{ marginTop: '1rem' }}>
+                {/* Summary strip */}
+                <div className="batch-summary">
+                  <span className="batch-stat batch-stat--total">
+                    {batchResults.summary.total_products} products
+                  </span>
+                  <span className="batch-stat batch-stat--success">
+                    ✓ {batchResults.summary.succeeded} succeeded
+                  </span>
+                  {batchResults.summary.skipped > 0 && (
+                    <span className="batch-stat batch-stat--skip">
+                      — {batchResults.summary.skipped} skipped
+                    </span>
+                  )}
+                  {batchResults.summary.failed > 0 && (
+                    <span className="batch-stat batch-stat--error">
+                      ✗ {batchResults.summary.failed} failed
+                    </span>
+                  )}
+                  <span className="batch-stat batch-stat--periods">
+                    {batchResults.summary.total_periods} total periods
+                  </span>
+                </div>
+
+                {/* Per-product log */}
+                <ul className="batch-log">
+                  {batchResults.results.map((r) => (
+                    <li key={r.product_id} className={`batch-log-item batch-log-item--${r.status}`}>
+                      <span className="batch-log-status">
+                        {r.status === 'success' ? '✓' : r.status === 'skipped' ? '—' : '✗'}
+                      </span>
+                      <span className="batch-log-name">{r.product_name}</span>
+                      <span className="batch-log-msg">{r.message}</span>
+                      {r.status === 'success' && (
+                        <span className="badge badge-secondary" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                          {r.model_used}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ── Filter ── */}
-      <div className="card filters">
-        <label>Filter by Product:</label>
+      <div className="card filters">        <label>Filter by Product:</label>
         <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)}>
           <option value="">All Products</option>
           {products.map((product) => (

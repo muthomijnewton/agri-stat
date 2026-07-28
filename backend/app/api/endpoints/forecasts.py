@@ -75,6 +75,78 @@ def generate_forecast(
     }
 
 
+@router.post("/generate-all", status_code=status.HTTP_200_OK)
+def generate_all_forecasts(
+    model: str = Query(default="auto", enum=["auto", "prophet", "arima"]),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    """
+    Trigger forecast generation for every active product in one call.
+
+    Returns a per-product result list so the frontend can display a
+    live progress log.  Products with insufficient transaction history
+    are skipped with a 'skipped' status rather than aborting the whole run.
+    """
+    products = db.query(Product).filter(Product.is_active == True).all()  # noqa: E712
+
+    if not products:
+        raise HTTPException(status_code=404, detail="No active products found.")
+
+    results = []
+    total_periods = 0
+
+    for product in products:
+        try:
+            forecasts = ForecastingService.generate_forecast(
+                db, product.id, forecast_type=model
+            )
+            if forecasts:
+                total_periods += len(forecasts)
+                results.append({
+                    "product_id":       product.id,
+                    "product_name":     product.name,
+                    "status":           "success",
+                    "periods_generated": len(forecasts),
+                    "model_used":       model,
+                    "message":          f"{len(forecasts)} day(s) generated",
+                })
+            else:
+                results.append({
+                    "product_id":       product.id,
+                    "product_name":     product.name,
+                    "status":           "skipped",
+                    "periods_generated": 0,
+                    "model_used":       model,
+                    "message":          "Not enough transaction history (need ≥ 10 records)",
+                })
+        except Exception as exc:
+            results.append({
+                "product_id":       product.id,
+                "product_name":     product.name,
+                "status":           "error",
+                "periods_generated": 0,
+                "model_used":       model,
+                "message":          str(exc),
+            })
+
+    succeeded = sum(1 for r in results if r["status"] == "success")
+    skipped   = sum(1 for r in results if r["status"] == "skipped")
+    failed    = sum(1 for r in results if r["status"] == "error")
+
+    return {
+        "summary": {
+            "total_products":  len(products),
+            "succeeded":       succeeded,
+            "skipped":         skipped,
+            "failed":          failed,
+            "total_periods":   total_periods,
+            "model_used":      model,
+        },
+        "results": results,
+    }
+
+
 @router.get("/product/{product_id}", response_model=List[ForecastResponse])
 def get_product_forecasts(
     product_id: int,
