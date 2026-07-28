@@ -1,263 +1,110 @@
-# 🌾 AgricStat
+# AgricStat Dash
 
-Agricultural Intelligence & Forecasting Infrastructure for Cooperative-Scale Decision Making
+AgricStat Dash is a full-stack platform for demand forecasting, inventory optimization, and operational analytics in agricultural supply chains.
 
-AgricStat is a production-grade agricultural analytics platform built to help farms, cooperatives, distributors, and agricultural retailers optimize inventory, forecast product demand, reduce waste, and improve operational decision-making through intelligent statistical modeling.
+The repository includes a FastAPI backend, a React-based web frontend, and a Flutter mobile client.
 
-Designed for fragmented agricultural markets where visibility, trust, and forecasting precision are often weak, AgricStat transforms historical transaction data into actionable inventory intelligence.
+## Repository Overview
 
-## Why AgricStat Exists
+- `backend/` - FastAPI application, database configuration, models, services, and API endpoints.
+- `web/` - React frontend application built with Vite.
+- `mobile/` - Flutter application for mobile device access.
+- `alembic/` - Database migration configuration.
+- `requirements.txt` - Python dependency file for backend runtime.
+- `run_backend.sh` - Shell script to start the backend server.
+- `run_frontend.sh` - Shell script to start the web frontend.
 
-Agricultural systems across emerging and fragmented markets often face:
+## Backend
 
-- Inconsistent inventory visibility
-- Overstocking and spoilage losses
-- Reactive purchasing decisions
-- Weak demand forecasting capability
-- Limited operational analytics
-- Poor planning coordination across supply actors
+The backend is implemented in Python with FastAPI and SQLAlchemy.
 
-These inefficiencies reduce profitability, increase waste, and weaken supply chain resilience.
+Key backend features:
 
-AgricStat addresses this by providing predictive decision-support infrastructure for agricultural businesses operating in dynamic real-world environments.
+- REST API for products, transactions, forecasts, recommendations, notifications, downloads, and authentication.
+- Forecasting services based on Prophet and ARIMA.
+- Inventory recommendation calculations using forecasted demand.
+- Automatic sample data seeding at startup via `backend/init_db.py`.
+- Default database configuration using SQLite, with optional PostgreSQL support through `DATABASE_URL`.
 
-## Core Capabilities
+### Backend Requirements
 
-### Intelligent Inventory Management
-
-Centralized product tracking across operational inventory layers with:
-
-- Product lifecycle visibility
-- Stock-level monitoring
-- Historical inventory state analysis
-- Soft-delete archival controls
-
-### Transaction Intelligence
-
-Track and analyze all operational movement:
-
-- Purchase records
-- Sales records
-- Historical transaction patterns
-- Product-specific movement analysis
-- Temporal trend analysis
-
-### Predictive Demand Forecasting
-
-Forecast future product demand using statistical models including:
-
-- Prophet forecasting
-- ARIMA forecasting
-- Confidence interval estimation
-- Forecast accuracy monitoring (MAPE scoring)
-- Seasonal demand pattern recognition
-
-This enables proactive planning instead of reactive correction.
-
-### Inventory Optimization Engine
-
-Automatically recommends ideal stock levels using adaptive inventory logic based on:
-
-- Historical demand behavior
-- Supply lead-time assumptions
-- Safety stock calculations
-- Demand variability buffers
-
-Recommendation workflow:
-
-- Pending → Approved → Implemented
-
-### Decision Intelligence Dashboard
-
-Operational insights surfaced visually through:
-
-- Product performance metrics
-- Inventory status visibility
-- Forecast trends
-- Recommendation status tracking
-- Forecast confidence visualization
-
-Built for fast executive interpretation.
-
-## Production Architecture
-
-AgricStat is structured as a modern modular full-stack platform.
-
-### Backend Infrastructure
-
-- Framework: FastAPI
-- Language: Python 3.13
-- Database: PostgreSQL
-- ORM: SQLAlchemy 2.0
-- Forecasting Engine: Prophet + StatsModels ARIMA
-- API Documentation: OpenAPI / Swagger
-- Server Runtime: Uvicorn ASGI
-
-Core backend responsibilities:
-
-- Business logic orchestration
-- Forecast generation
-- Inventory recommendation processing
-- Data validation
-- API exposure
-- Persistence control
-
-### Frontend Platform
-
-- Framework: React 18
-- Build System: Vite
-- Routing: React Router
-- HTTP Layer: Axios
-- Styling: Modular CSS Architecture
-
-Capabilities:
-
-- Responsive multi-device UI
-- Operational dashboards
-- Data-entry workflows
-- Forecast visualization
-- Recommendation approval pipelines
-
-### Mobile Layer
-
-- Framework: Flutter
-
-Mobile parity includes:
-
-- Product access
-- Transaction management
-- Forecast visibility
-- Inventory recommendation workflows
-- Field-operational accessibility
-
-Designed for mobile-first agricultural environments.
-
-## Platform Structure
-
-```
-agric-stat/
-
-backend/
-    app/
-        routes/
-        models/
-        services/
-        core/
-        main.py
-
-frontend/
-    src/
-        pages/
-        components/
-        services/
-        styles/
-
-mobile/
-    lib/
-        screens/
-        widgets/
-        services/
-        models/
-
-docs/
-    API.md
-    ARCHITECTURE.md
-```
-
-## Technical Quality Standards
-
-AgricStat follows production engineering discipline:
-
-- Modular service separation
-- Test-driven backend validation
-- Environment configuration isolation
-- Relative-path documentation portability
-- Clean deployment readiness
-- Structured API contracts
-- Scalable maintainability patterns
-
-## Testing Coverage
-
-Backend validation suite includes:
-
-- API route testing
-- Forecast service testing
-- Database integration validation
-- Business-rule enforcement tests
-- Data consistency assurance
-
-Run tests:
+Install runtime dependencies from the repository root or inside `backend/`:
 
 ```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Starting the Backend
+
+```bash
+python backend/init_db.py
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The backend exposes OpenAPI documentation at:
+
+`http://localhost:8000/docs`
+
+## Web Frontend
+
+The primary web frontend is located in `web/` and uses React with Vite.
+
+### Web Frontend Setup
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The frontend expects the backend API to be available at `http://localhost:8000`.
+
+## Mobile Client
+
+The mobile client is implemented with Flutter under `mobile/`.
+
+The mobile application is intended to provide product access, transaction management, forecast viewing, and recommendation workflows on mobile devices.
+
+## Development Notes
+
+- `backend/app/core/config.py` sets environment defaults for database connection, API metadata, CORS origins, and forecasting settings.
+- `backend/app/api/routes.py` registers API routers for authentication, products, transactions, forecasts, recommendations, downloads, and notifications.
+- `backend/app/services/forecasting.py` handles demand forecasting and inventory recommendation calculations.
+
+## Testing
+
+Run backend tests from the `backend/` directory:
+
+```bash
+cd backend
 pytest tests/ -v
 ```
 
-Coverage mode:
+For coverage:
 
 ```bash
 pytest tests/ --cov=app
 ```
 
-## Local Deployment
+## Environment Configuration
 
-### Backend:
+The backend supports environment configuration via `.env` files and the `DATABASE_URL` variable.
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python init_db.py
-python -m uvicorn app.main:app --reload --port 8000
-```
+If `DATABASE_URL` is not set, the backend uses a local SQLite database file at `backend/agric_stat.db`.
 
-### Frontend:
+## Recommended Startup
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+From the repository root:
 
-### Application Access:
+1. Create and activate a Python virtual environment.
+2. Install backend dependencies.
+3. Initialize the database and sample data.
+4. Start the backend server.
+5. Start the web frontend.
 
-**Frontend:**
-
-http://localhost:5173
-
-**Backend API Docs:**
-
-http://localhost:8000/docs
-
-## Strategic Use Cases
-
-AgricStat is designed for:
-
-- **Agricultural Cooperatives** - Shared forecasting and inventory planning
-- **Regional Distributors** - Demand visibility across distribution points
-- **Retail Agricultural Networks** - Sales intelligence and stock optimization
-- **Supply Coordination Hubs** - Cross-actor inventory synchronization
-- **Agricultural Data Modernization Projects** - Digital agricultural intelligence infrastructure
-
-## Future Infrastructure Evolution
-
-Planned expansion includes:
-
-- Multi-tenant cooperative environments
-- Advanced forecasting ensembles
-- PDF and CSV reporting exports
-- Role-based authorization systems
-- Real-time event notifications
-- Collaborative operational planning
-- Historical anomaly detection
-
-### Potential Decentralized Extensions
-
-AgricStat is intentionally architected to support future decentralized trust integrations such as:
-
-- Verifiable inventory event anchoring
-- Cooperative transaction immutability
-- Supply chain audit proofs
+This README reflects the current repository structure, runtime dependencies, and startup process without presentation enhancements.
 - Tamper-resistant historical forecasting logs
 - Agricultural credit reputation layers
 
@@ -283,7 +130,7 @@ AgricStat exists to provide that operational intelligence layer.
 
 - **Documentation**: See [RUN_LOCALLY.md](RUN_LOCALLY.md) first
 - **Backend issues**: Check [backend/README.md](backend/README.md)
-- **Frontend issues**: Check [frontend/README.md](frontend/README.md)
+- **Frontend issues**: Check [web/README.md](web/README.md)
 - **GitHub issues**: Create an issue in this repository
 
 ---

@@ -78,8 +78,8 @@ INFO:     Application startup complete
 **Open a NEW Command Prompt and run:**
 
 ```bash
-# Navigate to frontend folder
-cd frontend
+# Navigate to web folder
+cd web
 
 # Install dependencies
 npm install
@@ -91,14 +91,14 @@ npm run dev
 **Expected Output:**
 ```
 VITE v5.4.21  ready in XXX ms
-➜  Local:   http://localhost:3001/
+➜  Local:   http://localhost:5173/
 ```
 
 ### Step 4: Open In Browser
 
 **Open your web browser and go to:**
 ```
-http://localhost:3001
+http://localhost:5173
 ```
 
 ✅ **App is running!** 🎉
@@ -228,8 +228,8 @@ INFO:     Application startup complete
 **Open a NEW Terminal window and run:**
 
 ```bash
-# Navigate to frontend folder
-cd frontend
+# Navigate to web folder
+cd web
 
 # Install dependencies
 npm install
@@ -241,14 +241,14 @@ npm run dev
 **Expected Output:**
 ```
 VITE v5.4.21  ready in XXX ms
-➜  Local:   http://localhost:3001/
+➜  Local:   http://localhost:5173/
 ```
 
 ### Step 4: Open In Browser
 
 **Open your web browser and go to:**
 ```
-http://localhost:3001
+http://localhost:5173
 ```
 
 ✅ **App is running!** 🎉
@@ -400,8 +400,8 @@ INFO:     Application startup complete
 **Open a NEW Terminal window and run:**
 
 ```bash
-# Navigate to frontend folder
-cd frontend
+# Navigate to web folder
+cd web
 
 # Install dependencies
 npm install
@@ -413,14 +413,14 @@ npm run dev
 **Expected Output:**
 ```
 VITE v5.4.21  ready in XXX ms
-➜  Local:   http://localhost:3001/
+➜  Local:   http://localhost:5173/
 ```
 
 ### Step 4: Open In Browser
 
 **Open your web browser and go to:**
 ```
-http://localhost:3001
+http://localhost:5173
 ```
 
 ✅ **App is running!** 🎉
@@ -486,13 +486,13 @@ python -m uvicorn app.main:app --reload --port 8000
 
 **Terminal 2 - Frontend:**
 ```bash
-cd frontend
+cd web
 npm run dev
 ```
 
 **Browser:**
 ```
-http://localhost:3001
+http://localhost:5173
 ```
 
 ### Stop the App
@@ -638,7 +638,7 @@ curl http://localhost:8000/api/recommendations/
 
 **Causes:**
 1. Backend server not running
-2. Port 3001 can't reach port 8000
+2. Frontend at port 5173 can't reach backend at port 8000
 3. Database not initialized
 
 **Fix:**
@@ -665,7 +665,7 @@ python init_db.py
 # 2. Check port 8000 is not blocked
 # 3. Try different port:
 python -m uvicorn app.main:app --reload --port 8001
-# Then access: http://localhost:3001 (frontend auto-discovers backend)
+# Then update web/.env: VITE_API_URL=http://localhost:8001/api
 ```
 
 ### Blank Page in Browser
@@ -707,7 +707,7 @@ source venv/bin/activate    # (venv\Scripts\activate on Windows)
 pip install -r requirements.txt
 
 # Frontend
-cd frontend
+cd web
 npm cache clean --force
 npm install
 ```
@@ -765,12 +765,12 @@ python -m uvicorn app.main:app --reload --port 8000
 
 2. **Check Terminals Running**
    - Terminal 1: Backend (port 8000)
-   - Terminal 2: Frontend (port 3001)
+   - Terminal 2: Frontend (port 5173)
    - Both should show "running" messages
 
 3. **Check Environment Files**
-   - Frontend `.env` (should exist in frontend folder)
-   - Backend `.env` (should exist in project root)
+   - Frontend `.env` (should exist in `web/` folder)
+   - Backend `.env` (should exist in `backend/` folder)
 
 4. **Manual Test API**
    ```bash
@@ -808,7 +808,7 @@ Now:
 2. Click through each page (Products, Transactions, Forecasts, Recommendations)
 3. Try adding a new product
 4. Check the API documentation at http://localhost:8000/docs
-5. Review the code in `frontend/src` and `backend/app`
+5. Review the code in `web/src` and `backend/app`
 
 ---
 

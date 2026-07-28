@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from app.main import app
 from app.db.database import Base, get_db
 from app.models.models import User, Product, Transaction, Forecast, InventoryRecommendation
+from app.core.security import get_current_user, get_current_admin, get_password_hash
 
 
 @pytest.fixture(scope="function")
@@ -59,6 +60,99 @@ def client(db_session):
     
     yield TestClient(app)
     
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_user(db_session):
+    """Create a regular authenticated user for tests."""
+    user = User(
+        username="auth_testuser",
+        email="auth@example.com",
+        password=get_password_hash("testpassword"),
+        full_name="Auth Test User",
+        is_admin=False,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def admin_user(db_session):
+    """Create an admin authenticated user for tests."""
+    user = User(
+        username="admin_testuser",
+        email="admin@example.com",
+        password=get_password_hash("adminpassword"),
+        full_name="Admin Test User",
+        is_admin=True,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def client(db_session, auth_user):
+    """
+    Authenticated test client — overrides both get_db and get_current_user
+    so every request is treated as coming from auth_user.
+    """
+    def override_get_db():
+        yield db_session
+
+    def override_get_current_user():
+        return auth_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    # get_current_admin calls get_current_user internally; override it too so
+    # admin routes work when the test user is an admin fixture.
+    app.dependency_overrides[get_current_admin] = override_get_current_user
+
+    yield TestClient(app)
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def admin_client(db_session, admin_user):
+    """
+    Authenticated test client with admin privileges.
+    """
+    def override_get_db():
+        yield db_session
+
+    def override_get_current_admin():
+        return admin_user
+
+    def override_get_current_user():
+        return admin_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_admin] = override_get_current_admin
+
+    yield TestClient(app)
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def unauthenticated_client(db_session):
+    """Test client with NO auth override — used to verify 401 responses."""
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    yield TestClient(app)
+
     app.dependency_overrides.clear()
 
 

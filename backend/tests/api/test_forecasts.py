@@ -2,6 +2,12 @@
 import pytest
 
 
+def test_unauthenticated_request_rejected(unauthenticated_client):
+    """Unauthenticated requests must be rejected with 401."""
+    response = unauthenticated_client.get("/api/forecasts")
+    assert response.status_code == 401
+
+
 def test_get_forecasts_empty(client):
     """Test getting forecasts when database is empty."""
     response = client.get("/api/forecasts")
@@ -67,8 +73,8 @@ def test_update_forecast(client, sample_forecast):
 def test_delete_forecast(client, sample_forecast):
     """Test deleting a forecast."""
     response = client.delete(f"/api/forecasts/{sample_forecast.id}")
-    assert response.status_code == 200
-    
+    assert response.status_code == 204
+
     # Verify forecast is deleted
     response = client.get(f"/api/forecasts/{sample_forecast.id}")
     assert response.status_code == 404

@@ -83,45 +83,12 @@ git push -u origin main
 
 ### 2.4 Initialize Database with Sample Data
 
-After backend is live:
+No manual step required. On first boot the backend automatically creates the default admin user and seeds sample products, transactions, forecasts, and recommendations via `backend/init_db.py`. This runs as part of the application startup sequence.
+
+To verify seeding completed, check the Render service logs or call the health endpoint:
 
 ```bash
-# Connect to Render PostgreSQL and seed data
-# Option A: Use Render Shell
-# 1. Go to your database in Render dashboard
-# 2. Click "Connect"
-# 3. Copy the connection URL
-# 4. From your local machine:
-
-psql "YOUR_INTERNAL_DB_URL" < backend/init_db_seed.sql
-```
-
-**Or create a seed endpoint** (recommended):
-
-Create file: `backend/app/api/endpoints/seed.py`
-
-```python
-from fastapi import APIRouter
-from app.db.database import SessionLocal
-from backend.init_db import add_sample_data
-
-router = APIRouter(prefix="/api", tags=["admin"])
-
-@router.post("/seed-database")
-def seed_database():
-    """Initialize database with sample data (admin only)"""
-    db = SessionLocal()
-    try:
-        add_sample_data()
-        return {"message": "Database seeded successfully"}
-    finally:
-        db.close()
-```
-
-Then call:
-
-```bash
-curl -X POST https://agric-stat-backend.render.com/api/seed-database
+curl https://agric-stat-backend.render.com/health
 ```
 
 ---
@@ -139,7 +106,7 @@ curl -X POST https://agric-stat-backend.render.com/api/seed-database
 2. Import your GitHub repo
 3. Configure:
    - **Framework**: Vite
-   - **Root Directory**: `frontend`
+   - **Root Directory**: `web`
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 
@@ -169,7 +136,7 @@ Back to Render dashboard:
 
 ## 🔗 Step 4: Update Frontend API URL
 
-Edit `frontend/src/services/api.js`:
+Edit `web/src/services/api.js`:
 
 ```javascript
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -177,29 +144,11 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 ---
 
-## 📊 Step 5: Initialize Sample Data
+## 📊 Step 5: Verify Sample Data
 
-### Option 1: Via API Endpoint (Easiest)
+Sample data is seeded automatically on first boot. To confirm, log in to the frontend and check the Dashboard — it should show products, transactions, forecasts, and recommendations.
 
-```bash
-curl -X POST https://agric-stat-backend.render.com/api/seed-database
-```
-
-### Option 2: Via Render Shell
-
-1. Go to PostgreSQL database in Render
-2. Click "Connect" → "External Database URL"
-3. Connect via psql and run:
-   ```sql
-   -- Import your seed SQL script
-   ```
-
-### Option 3: One-time Job
-
-Create in Render dashboard:
-
-- New **One-off Job**
-- Command: `cd backend && python init_db.py --include-data`
+If the database is empty (e.g. after a manual wipe), restart the Render service to trigger the startup seeder again.
 
 ---
 
@@ -239,9 +188,9 @@ API Docs: https://agric-stat-backend.render.com/docs
 
 ### Sample data not loading
 
-- Call `/api/seed-database` endpoint
-- Check database connectivity
-- Verify init_db script runs without errors
+- Check Render service logs for startup errors
+- Restart the service to re-run the startup seeder
+- Verify database connectivity and `DATABASE_URL`
 
 ---
 

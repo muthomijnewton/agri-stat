@@ -3,6 +3,12 @@ import pytest
 from datetime import datetime, timedelta
 
 
+def test_unauthenticated_request_rejected(unauthenticated_client):
+    """Unauthenticated requests must be rejected with 401."""
+    response = unauthenticated_client.get("/api/transactions")
+    assert response.status_code == 401
+
+
 def test_get_transactions_empty(client):
     """Test getting transactions when database is empty."""
     response = client.get("/api/transactions")
@@ -56,10 +62,10 @@ def test_update_transaction(client, sample_transaction):
 
 
 def test_delete_transaction(client, sample_transaction):
-    """Test deleting a transaction."""
+    """Test deleting a transaction returns 204 NO CONTENT."""
     response = client.delete(f"/api/transactions/{sample_transaction.id}")
-    assert response.status_code == 200
-    
+    assert response.status_code == 204
+
     # Verify transaction is deleted
     response = client.get(f"/api/transactions/{sample_transaction.id}")
     assert response.status_code == 404

@@ -3,6 +3,12 @@ import pytest
 from app.models.models import Product
 
 
+def test_unauthenticated_request_rejected(unauthenticated_client):
+    """Unauthenticated requests must be rejected with 401."""
+    response = unauthenticated_client.get("/api/products")
+    assert response.status_code == 401
+
+
 def test_get_products_empty(client):
     """Test getting products when database is empty."""
     response = client.get("/api/products")

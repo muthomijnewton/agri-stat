@@ -130,6 +130,7 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    transaction_type = Column(String(20), nullable=False, default="sale")  # 'sale' or 'purchase'
     quantity = Column(Integer, nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)
     total_price = Column(Numeric(12, 2), nullable=False)

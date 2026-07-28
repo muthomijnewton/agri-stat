@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Initialize database with sample data for Agricultural Statistics Dashboard
 Run this once to populate the database with realistic agricultural products and data
@@ -6,6 +7,21 @@ Run this once to populate the database with realistic agricultural products and 
 
 import sys
 import os
+import logging
+
+# Ensure stdout/stderr use UTF-8 on Windows (avoids cp1252 UnicodeEncodeError).
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -14,12 +30,13 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app.db.database import Base, engine, SessionLocal
 from app.models.models import User, Product, Transaction, Forecast, InventoryRecommendation
+from app.core.security import get_password_hash, password_is_hashed
 
 def init_database():
     """Create all tables in the database"""
-    print("📦 Creating database tables...")
+    logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created")
+    logger.info("Database tables created")
 
 def add_default_user():
     """Add a default user for authentication"""
@@ -29,30 +46,67 @@ def add_default_user():
         # Check if user already exists
         existing_user = db.query(User).filter(User.username == "admin@agri").first()
         if existing_user:
-            print("⚠️  User 'admin@agri' already exists, skipping user creation")
+            if not password_is_hashed(existing_user.password):
+                existing_user.password = get_password_hash(existing_user.password)
+                db.commit()
+                logger.info("Updated default user password hash")
+            logger.warning("User 'admin@agri' already exists, skipping user creation")
+            # Still run column migrations even if user exists
+            _migrate_add_transaction_type()
             return
         
-        print("\n👤 Adding default user...")
+        logger.info("Adding default user...")
         
         # Create default user with simple password (in production, use hashing)
         user = User(
             username="admin@agri",
             email="admin@agric-stat.local",
-            password="1234",  # Simple password for testing
+            password=get_password_hash("1234"),
             full_name="Admin User",
             is_admin=True,
             is_active=True
         )
         db.add(user)
         db.commit()
-        print("✅ Default user 'admin@agri' created successfully")
+        logger.info("Default user 'admin@agri' created successfully")
+        _migrate_add_transaction_type()
         
     except Exception as e:
         db.rollback()
-        print(f"❌ Error creating default user: {e}")
+        logger.error("Error creating default user: %s", e)
         raise
     finally:
         db.close()
+
+
+def _migrate_add_transaction_type():
+    """
+    Idempotent migration: add transaction_type column to existing transactions
+    tables that were created before this column was introduced.
+    Safe to call on every startup — does nothing if the column already exists.
+    """
+    import sqlite3
+    from app.core.config import DATABASE_URL
+
+    # Only applies to SQLite; PostgreSQL users should run Alembic
+    if not DATABASE_URL.startswith("sqlite"):
+        return
+
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(transactions)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "transaction_type" not in columns:
+            cursor.execute(
+                "ALTER TABLE transactions ADD COLUMN transaction_type VARCHAR(20) NOT NULL DEFAULT 'sale'"
+            )
+            conn.commit()
+            logger.info("Migration applied: added transaction_type column to transactions table")
+        conn.close()
+    except Exception as e:
+        logger.warning("Could not apply transaction_type migration: %s", e)
 
 def add_sample_data():
     """Add sample agricultural products and related data"""
@@ -62,42 +116,43 @@ def add_sample_data():
         # Check if data already exists
         existing_products = db.query(Product).count()
         if existing_products > 0:
-            print(f"⚠️  Database already has {existing_products} products, skipping sample data")
+            logger.warning("Database already has %d products, skipping sample data", existing_products)
             return
         
-        print("\n📊 Adding sample products...")
+        logger.info("Adding sample products...")
         
-        # Sample agricultural products - Extended catalog
+        # Sample agricultural products — prices are realistic Kenyan market
+        # approximates (KES per kg, retail/wholesale, 2025/2026).
         products_data = [
             {
                 "name": "Tomatoes",
                 "category": "Vegetables",
                 "description": "Fresh farm tomatoes - red, ripe and juicy",
-                "unit_price": Decimal("25.50"),
+                "unit_price": Decimal("80.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Maize (Corn)",
                 "category": "Grains",
-                "description": "High-quality maize for consumption",
-                "unit_price": Decimal("15.00"),
+                "description": "High-quality maize for consumption and livestock feed",
+                "unit_price": Decimal("55.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Beans",
                 "category": "Legumes",
-                "description": "Dried beans - protein rich",
-                "unit_price": Decimal("30.00"),
+                "description": "Dried rosecoco beans - protein rich",
+                "unit_price": Decimal("160.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Potatoes",
                 "category": "Root Vegetables",
-                "description": "Fresh potatoes directly from farm",
-                "unit_price": Decimal("18.75"),
+                "description": "Fresh Irish potatoes directly from farm",
+                "unit_price": Decimal("50.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -105,7 +160,7 @@ def add_sample_data():
                 "name": "Carrots",
                 "category": "Vegetables",
                 "description": "Orange carrots - sweet and crunchy",
-                "unit_price": Decimal("22.00"),
+                "unit_price": Decimal("60.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -113,39 +168,39 @@ def add_sample_data():
                 "name": "Cabbage",
                 "category": "Vegetables",
                 "description": "Fresh green cabbage heads",
-                "unit_price": Decimal("12.50"),
+                "unit_price": Decimal("40.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Onions",
                 "category": "Root Vegetables",
-                "description": "Golden onions - aromatic and flavorful",
-                "unit_price": Decimal("20.00"),
+                "description": "Red onions - aromatic and flavorful",
+                "unit_price": Decimal("90.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Wheat",
                 "category": "Grains",
-                "description": "Premium wheat for flour and bread",
-                "unit_price": Decimal("45.00"),
+                "description": "Premium wheat grain for flour and bread",
+                "unit_price": Decimal("65.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Lettuce",
+                "name": "Sukuma Wiki (Kale)",
                 "category": "Vegetables",
-                "description": "Crisp green leafy lettuce",
-                "unit_price": Decimal("28.00"),
+                "description": "Fresh collard greens - staple leafy vegetable",
+                "unit_price": Decimal("30.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Peppers",
+                "name": "Capsicum (Bell Pepper)",
                 "category": "Vegetables",
                 "description": "Colorful bell peppers - red, yellow, green",
-                "unit_price": Decimal("32.50"),
+                "unit_price": Decimal("200.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -153,15 +208,15 @@ def add_sample_data():
                 "name": "Broccoli",
                 "category": "Vegetables",
                 "description": "Fresh green broccoli florets",
-                "unit_price": Decimal("26.75"),
+                "unit_price": Decimal("150.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
                 "name": "Spinach",
                 "category": "Vegetables",
-                "description": "Organic fresh spinach leaves",
-                "unit_price": Decimal("35.00"),
+                "description": "Fresh spinach leaves",
+                "unit_price": Decimal("50.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -169,15 +224,15 @@ def add_sample_data():
                 "name": "Cucumbers",
                 "category": "Vegetables",
                 "description": "Fresh green cucumbers",
-                "unit_price": Decimal("18.50"),
+                "unit_price": Decimal("60.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Rice",
+                "name": "Rice (Pishori)",
                 "category": "Grains",
-                "description": "Long grain white rice",
-                "unit_price": Decimal("38.00"),
+                "description": "Premium Kenyan Pishori long-grain rice",
+                "unit_price": Decimal("200.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -185,15 +240,15 @@ def add_sample_data():
                 "name": "Sorghum",
                 "category": "Grains",
                 "description": "Nutritious sorghum grain",
-                "unit_price": Decimal("22.50"),
+                "unit_price": Decimal("70.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Peas",
+                "name": "Green Peas",
                 "category": "Legumes",
-                "description": "Green peas - fresh and sweet",
-                "unit_price": Decimal("42.00"),
+                "description": "Fresh green peas",
+                "unit_price": Decimal("120.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -201,7 +256,7 @@ def add_sample_data():
                 "name": "Lentils",
                 "category": "Legumes",
                 "description": "Red and brown lentils mix",
-                "unit_price": Decimal("48.50"),
+                "unit_price": Decimal("180.00"),
                 "unit": "kg",
                 "is_active": True
             },
@@ -209,23 +264,23 @@ def add_sample_data():
                 "name": "Garlic",
                 "category": "Root Vegetables",
                 "description": "Fresh garlic bulbs",
-                "unit_price": Decimal("55.00"),
+                "unit_price": Decimal("500.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Radishes",
+                "name": "Sweet Potatoes",
                 "category": "Root Vegetables",
-                "description": "Fresh red radishes",
-                "unit_price": Decimal("14.25"),
+                "description": "Orange-fleshed sweet potatoes",
+                "unit_price": Decimal("50.00"),
                 "unit": "kg",
                 "is_active": True
             },
             {
-                "name": "Beets",
-                "category": "Root Vegetables",
-                "description": "Purple beets with greens",
-                "unit_price": Decimal("19.75"),
+                "name": "Avocado",
+                "category": "Fruits",
+                "description": "Hass avocados - export and local grade",
+                "unit_price": Decimal("100.00"),
                 "unit": "kg",
                 "is_active": True
             }
@@ -238,13 +293,13 @@ def add_sample_data():
             products.append(product)
         
         db.commit()
-        print(f"✅ Added {len(products)} sample products")
+        logger.info("Added %d sample products", len(products))
         
         # Refresh to get IDs
         db.refresh(products[0])
         
         # Add sample transactions (90+ total)
-        print("📈 Adding sample transactions...")
+        logger.info("Adding sample transactions...")
         now = datetime.now()
         transactions = []
         
@@ -264,10 +319,10 @@ def add_sample_data():
                 transactions.append(transaction)
         
         db.commit()
-        print(f"✅ Added {len(transactions)} sample transactions")
+        logger.info("Added %d sample transactions", len(transactions))
         
         # Add sample forecasts (30+ total)
-        print("📊 Adding sample forecasts...")
+        logger.info("Adding sample forecasts...")
         forecasts = []
         
         for i in range(1, 16):  # 15 days of forecasts
@@ -286,10 +341,10 @@ def add_sample_data():
                 forecasts.append(forecast)
         
         db.commit()
-        print(f"✅ Added {len(forecasts)} sample forecasts")
+        logger.info("Added %d sample forecasts", len(forecasts))
         
         # Add sample recommendations (10+ total with various statuses)
-        print("💡 Adding sample recommendations...")
+        logger.info("Adding sample recommendations...")
         recommendations = []
         
         statuses = ["pending", "approved", "implemented"]
@@ -308,32 +363,28 @@ def add_sample_data():
             recommendations.append(recommendation)
         
         db.commit()
-        print(f"✅ Added {len(recommendations)} sample recommendations")
+        logger.info("Added %d sample recommendations", len(recommendations))
         
-        print("\n" + "="*50)
-        print("✨ DATABASE INITIALIZED WITH SAMPLE DATA")
-        print("="*50)
-        print(f"📦 Products: {len(products)}")
-        print(f"📈 Transactions: {len(transactions)}")
-        print(f"📊 Forecasts: {len(forecasts)}")
-        print(f"💡 Recommendations: {len(recommendations)}")
-        print("\n🌐 Visit API Docs to see data:")
-        print("   http://localhost:8000/docs")
-        print("\n🎨 Visit Frontend to see charts:")
-        print("   http://localhost:3000")
+        logger.info(
+            "Database initialized with sample data — "
+            "Products: %d | Transactions: %d | Forecasts: %d | Recommendations: %d",
+            len(products), len(transactions), len(forecasts), len(recommendations),
+        )
+        logger.info("API docs: http://localhost:8000/docs")
+        logger.info("Frontend: http://localhost:3000")
         
     except Exception as e:
         db.rollback()
-        print(f"❌ Error adding sample data: {e}")
+        logger.error("Error adding sample data: %s", e)
         raise
     finally:
         db.close()
 
 def reset_database():
     """Clear all data from database"""
-    print("⚠️  Clearing all database data...")
+    logger.warning("Clearing all database data...")
     Base.metadata.drop_all(bind=engine)
-    print("✅ Database cleared")
+    logger.info("Database cleared")
 
 if __name__ == "__main__":
     import argparse
@@ -354,7 +405,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    print("\n🌾 Agricultural Statistics Dashboard - Database Initialization\n")
+    logger.info("Agricultural Statistics Dashboard - Database Initialization")
     
     if args.reset:
         reset_database()
@@ -368,6 +419,4 @@ if __name__ == "__main__":
     if args.include_data:
         add_sample_data()
     
-    print("\n" + "="*50)
-    print("✅ All done! Your app is ready to use.")
-    print("="*50 + "\n")
+    logger.info("All done! Your app is ready to use.")

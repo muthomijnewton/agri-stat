@@ -2,6 +2,12 @@
 import pytest
 
 
+def test_unauthenticated_request_rejected(unauthenticated_client):
+    """Unauthenticated requests must be rejected with 401."""
+    response = unauthenticated_client.get("/api/recommendations")
+    assert response.status_code == 401
+
+
 def test_get_recommendations_empty(client):
     """Test getting recommendations when database is empty."""
     response = client.get("/api/recommendations")
@@ -62,22 +68,22 @@ def test_approve_recommendation(client, sample_recommendation):
 
 
 def test_approve_already_approved_recommendation(client, sample_recommendation, db):
-    """Test approving an already approved recommendation."""
+    """Test approving an already approved recommendation returns 409 CONFLICT."""
     # First approve it
     client.patch(f"/api/recommendations/{sample_recommendation.id}/approve")
-    
-    # Try to approve again
+
+    # Try to approve again — workflow only allows pending → approved
     response = client.patch(
         f"/api/recommendations/{sample_recommendation.id}/approve"
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def test_implement_recommendation(client, sample_recommendation):
     """Test implementing an approved recommendation."""
     # First approve it
     client.patch(f"/api/recommendations/{sample_recommendation.id}/approve")
-    
+
     # Then implement it
     response = client.patch(
         f"/api/recommendations/{sample_recommendation.id}/implement"
@@ -103,10 +109,10 @@ def test_update_recommendation(client, sample_recommendation):
 
 
 def test_delete_recommendation(client, sample_recommendation):
-    """Test deleting a recommendation."""
+    """Test deleting a recommendation returns 204 NO CONTENT."""
     response = client.delete(f"/api/recommendations/{sample_recommendation.id}")
-    assert response.status_code == 200
-    
+    assert response.status_code == 204
+
     # Verify recommendation is deleted
     response = client.get(f"/api/recommendations/{sample_recommendation.id}")
     assert response.status_code == 404

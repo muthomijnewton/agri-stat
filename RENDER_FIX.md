@@ -77,16 +77,12 @@ curl https://YOUR_BACKEND_URL/docs
 
 # Check database connection
 curl https://YOUR_BACKEND_URL/api/products
-
-# Seed database (if not already done)
-curl -X POST https://YOUR_BACKEND_URL/api/auth/seed-database
 ```
 
 You should see:
 
 - ✅ Swagger UI loads
-- ✅ 20 products returned
-- ✅ Database seeded with sample data
+- ✅ 20 products returned (seeded automatically on first boot)
 
 ---
 

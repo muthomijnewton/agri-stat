@@ -1,9 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 
 class ApiService {
   static const String baseUrl =
-      'https://agric-stat-dash-1.onrender.com/api';
+      String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue:
+        'https://agric-stat-dash-1.onrender.com/api',
+  );
 
   late final Dio _dio;
 
@@ -24,6 +29,11 @@ class ApiService {
           'Accept': 'application/json',
         },
       ),
+    );
+
+    // Inject the stored Bearer token into every outgoing request.
+    _dio.interceptors.add(
+      AuthInterceptor(logger),
     );
 
     _dio.interceptors.add(
@@ -446,23 +456,58 @@ class ApiService {
   // HEALTH CHECK
   // ==========================
 
-  Future<bool>
-      checkHealth() async {
+  /// Checks backend availability.
+  ///
+  /// The health endpoint lives at the root, not under /api, so we strip
+  /// the /api prefix and hit <host>/health directly.
+  Future<bool> checkHealth() async {
     try {
-      final response =
-          await _dio.get(
-        '/health',
+      // baseUrl ends with /api — remove that suffix for the health route
+      final healthUrl = baseUrl.endsWith('/api')
+          ? '${baseUrl.substring(0, baseUrl.length - 4)}/health'
+          : '$baseUrl/health';
+
+      final response = await _dio.get(
+        healthUrl,
+        options: Options(sendTimeout: const Duration(seconds: 10)),
       );
 
-      return response.statusCode ==
-          200;
+      return response.statusCode == 200;
     } catch (e) {
-      logger.e(
-        'Health error: $e',
-      );
+      logger.e('Health error: $e');
 
       return false;
     }
+  }
+}
+
+// ==========================
+// AUTH INTERCEPTOR
+// ==========================
+
+/// Reads the JWT from FlutterSecureStorage and attaches it as a
+/// Bearer token on every request.  Requests that already carry an
+/// Authorization header (e.g. the login call itself) are left as-is.
+class AuthInterceptor extends Interceptor {
+  final Logger logger;
+  final _storage = const FlutterSecureStorage();
+
+  AuthInterceptor(this.logger);
+
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Skip if the caller already set an Authorization header.
+    if (!options.headers.containsKey('Authorization')) {
+      final token = await _storage.read(key: 'token');
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+        logger.d('AUTH: Bearer token attached');
+      }
+    }
+    super.onRequest(options, handler);
   }
 }
 

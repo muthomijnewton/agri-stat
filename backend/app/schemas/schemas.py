@@ -27,6 +27,62 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+# ============== Profile Schemas ==============
+class UserProfileResponse(BaseModel):
+    """Full profile read — all public fields on the User model."""
+    id: int
+    username: str
+    email: str
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    # Business
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    # Location
+    country: Optional[str] = None
+    county: Optional[str] = None
+    sub_county: Optional[str] = None
+    village: Optional[str] = None
+    # Farm
+    farm_size: Optional[str] = None
+    primary_crop: Optional[str] = None
+    primary_livestock: Optional[str] = None
+    # Preferences
+    currency: Optional[str] = None
+    bio: Optional[str] = None
+    # Status
+    is_admin: bool
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class UserProfileUpdate(BaseModel):
+    """All editable profile fields — every field optional."""
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    # Business
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    # Location
+    country: Optional[str] = None
+    county: Optional[str] = None
+    sub_county: Optional[str] = None
+    village: Optional[str] = None
+    # Farm
+    farm_size: Optional[str] = None
+    primary_crop: Optional[str] = None
+    primary_livestock: Optional[str] = None
+    # Preferences
+    currency: Optional[str] = None
+    bio: Optional[str] = None
+    # Password change (requires current_password to authorise)
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
 # ============== Login Schemas ==============
 class LoginRequest(BaseModel):
     username: str
@@ -38,6 +94,8 @@ class LoginResponse(BaseModel):
     email: str
     full_name: Optional[str]
     is_admin: bool
+    access_token: str
+    token_type: str = "bearer"
     message: str = "Login successful"
 
 # ============== Product Schemas ==============
@@ -71,6 +129,7 @@ class ProductResponse(ProductBase):
 # ============== Transaction Schemas ==============
 class TransactionBase(BaseModel):
     product_id: int
+    transaction_type: str = "sale"  # 'sale' or 'purchase'
     quantity: int
     unit_price: Decimal
     total_price: Decimal
@@ -81,6 +140,7 @@ class TransactionCreate(TransactionBase):
     user_id: Optional[int] = None
 
 class TransactionUpdate(BaseModel):
+    transaction_type: Optional[str] = None
     quantity: Optional[int] = None
     unit_price: Optional[Decimal] = None
     total_price: Optional[Decimal] = None

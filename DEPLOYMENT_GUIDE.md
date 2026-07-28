@@ -89,9 +89,8 @@ Ensure your GitHub repo has:
 
 - ✅ `.env.example`
 - ✅ `backend/requirements.txt`
-- ✅ `frontend/package.json`
+- ✅ `web/package.json`
 - ✅ `backend/render.yaml` (Render config)
-- ✅ `frontend/vercel.json` (Vercel config)
 
 ---
 
@@ -116,11 +115,9 @@ Ensure your GitHub repo has:
    - `DATABASE_URL`: (from PostgreSQL)
 5. Deploy ⏳
 
-**Seed Database**
+**Sample Data**
 
-```bash
-curl -X POST https://YOUR_BACKEND/api/seed-database
-```
+Sample data is seeded automatically on first boot via the startup sequence in `init_db.py`. No manual seeding step required.
 
 ---
 
@@ -133,7 +130,7 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 3. Settings:
    ```
    Framework: Vite
-   Root: frontend
+   Root: web
    Build: npm run build
    Output: dist
    ```
@@ -221,9 +218,6 @@ git push origin main  # Auto-deploys on Render
 # Deploy frontend changes
 git push origin main  # Auto-deploys on Vercel
 
-# Seed database manually
-curl -X POST https://YOUR_BACKEND/api/seed-database
-
 # Check backend logs
 # → Render Dashboard → Backend Service → Logs
 
@@ -239,8 +233,8 @@ curl -X POST https://YOUR_BACKEND/api/seed-database
 | ------------------- | ----------------------------------------------- |
 | **502 Bad Gateway** | Backend is spinning up or crashed - wait 30 sec |
 | **CORS Error**      | Add Vercel URL to `ALLOWED_ORIGINS` in Render   |
-| **Can't login**     | Run `/api/seed-database` to initialize DB       |
-| **No sample data**  | Manually call seed endpoint or use Render CLI   |
+| **Can't login**     | Restart backend to re-run the startup seeder    |
+| **No sample data**  | Restart the Render service to trigger re-seeding |
 | **Blank dashboard** | Check browser console (F12) for API errors      |
 
 ---

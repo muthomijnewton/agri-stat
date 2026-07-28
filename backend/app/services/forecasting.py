@@ -2,11 +2,13 @@
 Forecasting service for demand prediction using Prophet and ARIMA
 """
 
+import logging
 from typing import List, Dict, Tuple, Optional
 from datetime import date, datetime, timedelta
 import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from app.models.models import Transaction, Forecast, Product
 from app.core.config import FORECAST_DAYS, FORECAST_MODEL
 
@@ -21,6 +23,8 @@ try:
     PROPHET_AVAILABLE = True
 except ImportError:
     PROPHET_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 
 class ForecastingService:
@@ -115,7 +119,7 @@ class ForecastingService:
             return forecasts, min(mape, 100.0)  # Cap at 100%
             
         except Exception as e:
-            print(f"Error in Prophet forecast: {e}")
+            logger.error("Error in Prophet forecast: %s", e)
             return [], 0.0
     
     @staticmethod
@@ -160,7 +164,7 @@ class ForecastingService:
             return forecasts, min(mape, 100.0)
             
         except Exception as e:
-            print(f"Error in ARIMA forecast: {e}")
+            logger.error("Error in ARIMA forecast: %s", e)
             return [], 0.0
     
     @staticmethod
@@ -246,7 +250,3 @@ class ForecastingService:
             'average_daily_demand': round(avg_daily_demand, 2),
             'reason': f'Based on {len(forecasts)} days of forecasted demand'
         }
-
-
-# Import needed for type hints
-from sqlalchemy import and_

@@ -43,14 +43,9 @@
 
 ### Initialize Database
 
-- [ ] Option A: Wait 5 min, then visit: `https://YOUR_BACKEND_URL/docs`
-  - [ ] Find `/api/seed-database` endpoint
-  - [ ] Click "Try it out" → "Execute"
-- [ ] Option B: Use curl from terminal:
-  ```bash
-  curl -X POST https://YOUR_BACKEND_URL/api/seed-database
-  ```
-- [ ] Verify in API docs → `/api/products` shows 20+ products
+Sample data is seeded automatically when the backend starts for the first time. No manual step is required.
+
+- [ ] Verify in API docs → `/api/products` shows 20+ products (allow 2-3 minutes for first boot)
 
 ---
 
@@ -66,7 +61,7 @@
 ### Configure Build
 
 - [ ] Framework: `Vite`
-- [ ] Root Directory: `frontend`
+- [ ] Root Directory: `web`
 - [ ] Build Command: `npm run build`
 - [ ] Install Command: `npm install`
 - [ ] Output Directory: `dist`
@@ -140,7 +135,7 @@
 | DB connection error   | Verify `DATABASE_URL` env var in Render           |
 | Frontend shows 404    | Check `VITE_API_URL` environment variable         |
 | CORS error in browser | Add frontend URL to backend `ALLOWED_ORIGINS`     |
-| No sample data        | Visit `/api/seed-database` endpoint to initialize |
+| No sample data        | Restart the Render service to re-run startup seeder |
 | Render spins down     | Restart service or use Paid Tier                  |
 
 ---
