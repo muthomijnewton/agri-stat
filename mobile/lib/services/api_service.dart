@@ -268,6 +268,52 @@ class ApiService {
   }
 
   // ==========================
+  // GENERATE — FORECASTS
+  // ==========================
+
+  /// POST /forecasts/generate/{product_id}
+  ///
+  /// Returns: { message, product_id, model_used, periods_generated }
+  Future<Map<String, dynamic>> generateForecast(int productId, {String model = 'auto'}) async {
+    final response = await _dio.post(
+      '/forecasts/generate/$productId',
+      queryParameters: {'model': model},
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  /// POST /forecasts/generate-all
+  ///
+  /// Returns: { summary: { ... }, results: [ { product_id, product_name, status, ... } ] }
+  Future<Map<String, dynamic>> generateAllForecasts({String model = 'auto'}) async {
+    final response = await _dio.post(
+      '/forecasts/generate-all',
+      queryParameters: {'model': model},
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  // ==========================
+  // GENERATE — RECOMMENDATIONS
+  // ==========================
+
+  /// POST /recommendations/generate/{product_id}
+  ///
+  /// Returns: { message, recommendation_id, recommended_quantity, reason }
+  Future<Map<String, dynamic>> generateRecommendation(int productId) async {
+    final response = await _dio.post('/recommendations/generate/$productId');
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  /// POST /recommendations/generate-all
+  ///
+  /// Returns: { summary: { ... }, results: [ { product_id, product_name, status, ... } ] }
+  Future<Map<String, dynamic>> generateAllRecommendations() async {
+    final response = await _dio.post('/recommendations/generate-all');
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  // ==========================
   // NOTIFICATIONS
   // ==========================
 
