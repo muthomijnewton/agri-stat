@@ -47,8 +47,9 @@ def get_daily_transactions(
     _: User = Depends(get_current_user),
 ):
     """
-    Return daily transaction totals (quantity sold + revenue) for the last
-    `days` days.  Used by the Dashboard bar chart.
+    Return daily sales totals (quantity + revenue) for the last `days` days.
+    Only SALES are counted — purchases are costs, not revenue.
+    Used by the Dashboard bar chart.
     """
     since = date.today() - timedelta(days=days)
 
@@ -59,7 +60,10 @@ def get_daily_transactions(
             func.sum(Transaction.total_price).label("total_revenue"),
             func.count(Transaction.id).label("count"),
         )
-        .filter(Transaction.transaction_date >= since)
+        .filter(
+            Transaction.transaction_date >= since,
+            Transaction.transaction_type == "sale",
+        )
         .group_by(Transaction.transaction_date)
         .order_by(Transaction.transaction_date)
         .all()
@@ -83,7 +87,8 @@ def get_revenue_by_product(
     _: User = Depends(get_current_user),
 ):
     """
-    Return total revenue grouped by product for the last `days` days.
+    Return total SALES revenue grouped by product for the last `days` days.
+    Purchases are excluded — they represent costs, not revenue.
     Used by the Dashboard pie / bar chart.
     """
     since = date.today() - timedelta(days=days)
@@ -95,7 +100,10 @@ def get_revenue_by_product(
             func.sum(Transaction.quantity).label("quantity"),
         )
         .join(Transaction, Transaction.product_id == Product.id)
-        .filter(Transaction.transaction_date >= since)
+        .filter(
+            Transaction.transaction_date >= since,
+            Transaction.transaction_type == "sale",
+        )
         .group_by(Product.id, Product.name)
         .order_by(func.sum(Transaction.total_price).desc())
         .limit(10)

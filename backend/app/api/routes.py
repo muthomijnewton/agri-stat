@@ -9,6 +9,7 @@ from app.api.endpoints import (
     notifications,
     stats,
     exports,
+    imports,
 )
 
 api_router = APIRouter()
@@ -22,3 +23,4 @@ api_router.include_router(downloads.router)
 api_router.include_router(notifications.router)
 api_router.include_router(stats.router)
 api_router.include_router(exports.router)
+api_router.include_router(imports.router)

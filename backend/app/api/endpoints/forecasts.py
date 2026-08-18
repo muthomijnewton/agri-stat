@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.models import Forecast, Product, User
 from app.schemas.schemas import ForecastCreate, ForecastUpdate, ForecastResponse
 from app.core.security import get_current_user
 from app.services.forecasting import ForecastingService
-from typing import List
+from typing import List, Optional
 from datetime import date
 
 router = APIRouter(prefix="/api/forecasts", tags=["forecasts"])
@@ -15,9 +15,9 @@ router = APIRouter(prefix="/api/forecasts", tags=["forecasts"])
 def list_forecasts(
     skip: int = 0,
     limit: int = 100,
-    product_id: int = Query(None),
-    start_date: date = Query(None),
-    end_date: date = Query(None),
+    product_id: Optional[int] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
@@ -48,17 +48,21 @@ def generate_forecast(
     """
     Trigger AI demand-forecast generation for a product.
 
-    Runs the ForecastingService (Prophet → ARIMA fallback) against the
-    product's transaction history and persists the resulting forecast rows.
-    Returns a summary with the number of rows generated.
+    Deletes any existing forecasts for the product before inserting new ones
+    (upsert-by-replace) so re-running never creates duplicate rows.
     """
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    # ── upsert: remove existing forecasts for this product first ──────────
+    db.query(Forecast).filter(Forecast.product_id == product_id).delete()
+    db.flush()
+
     forecasts = ForecastingService.generate_forecast(db, product_id, forecast_type=model)
 
     if not forecasts:
+        db.rollback()
         raise HTTPException(
             status_code=422,
             detail=(
@@ -66,6 +70,8 @@ def generate_forecast(
                 "Record at least 10 transactions for this product first."
             ),
         )
+
+    db.commit()
 
     return {
         "message": f"Forecast generated successfully for '{product.name}'",
@@ -75,75 +81,49 @@ def generate_forecast(
     }
 
 
-@router.post("/generate-all", status_code=status.HTTP_200_OK)
+def _run_generate_all(model: str, db: Session) -> None:
+    """Background worker that generates forecasts for all active products."""
+    products = db.query(Product).filter(Product.is_active == True).all()  # noqa: E712
+    for product in products:
+        try:
+            db.query(Forecast).filter(Forecast.product_id == product.id).delete()
+            db.flush()
+            ForecastingService.generate_forecast(db, product.id, forecast_type=model)
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            import logging
+            logging.getLogger(__name__).warning(
+                "generate-all: failed for product %d (%s): %s", product.id, product.name, exc
+            )
+
+
+@router.post("/generate-all", status_code=status.HTTP_202_ACCEPTED)
 def generate_all_forecasts(
+    background_tasks: BackgroundTasks,
     model: str = Query(default="auto", enum=["auto", "prophet", "arima"]),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     """
-    Trigger forecast generation for every active product in one call.
+    Enqueue forecast generation for every active product as a background task.
 
-    Returns a per-product result list so the frontend can display a
-    live progress log.  Products with insufficient transaction history
-    are skipped with a 'skipped' status rather than aborting the whole run.
+    Returns 202 Accepted immediately — the forecasts are generated
+    asynchronously so the request doesn't time out on large product catalogues.
     """
     products = db.query(Product).filter(Product.is_active == True).all()  # noqa: E712
 
     if not products:
         raise HTTPException(status_code=404, detail="No active products found.")
 
-    results = []
-    total_periods = 0
-
-    for product in products:
-        try:
-            forecasts = ForecastingService.generate_forecast(
-                db, product.id, forecast_type=model
-            )
-            if forecasts:
-                total_periods += len(forecasts)
-                results.append({
-                    "product_id":       product.id,
-                    "product_name":     product.name,
-                    "status":           "success",
-                    "periods_generated": len(forecasts),
-                    "model_used":       model,
-                    "message":          f"{len(forecasts)} day(s) generated",
-                })
-            else:
-                results.append({
-                    "product_id":       product.id,
-                    "product_name":     product.name,
-                    "status":           "skipped",
-                    "periods_generated": 0,
-                    "model_used":       model,
-                    "message":          "Not enough transaction history (need ≥ 10 records)",
-                })
-        except Exception as exc:
-            results.append({
-                "product_id":       product.id,
-                "product_name":     product.name,
-                "status":           "error",
-                "periods_generated": 0,
-                "model_used":       model,
-                "message":          str(exc),
-            })
-
-    succeeded = sum(1 for r in results if r["status"] == "success")
-    skipped   = sum(1 for r in results if r["status"] == "skipped")
-    failed    = sum(1 for r in results if r["status"] == "error")
+    background_tasks.add_task(_run_generate_all, model, db)
 
     return {
-        "summary": {
-            "total_products":  len(products),
-            "succeeded":       succeeded,
-            "skipped":         skipped,
-            "failed":          failed,
-            "total_periods":   total_periods,
-            "model_used":      model,
-        },
-        "results": results,
+        "message": f"Forecast generation started for {len(products)} product(s). "
+                   "Results will be available shortly.",
+        "total_products": len(products),
+        "model_requested": model,
+        "status": "queued",
     }
 
 
@@ -155,9 +135,13 @@ def get_product_forecasts(
     _: User = Depends(get_current_user),
 ):
     """Return up to `days` upcoming forecasts for a specific product."""
+    today = date.today()
     return (
         db.query(Forecast)
-        .filter(Forecast.product_id == product_id)
+        .filter(
+            Forecast.product_id == product_id,
+            Forecast.forecast_date >= today,
+        )
         .order_by(Forecast.forecast_date)
         .limit(days)
         .all()
@@ -183,7 +167,12 @@ def create_forecast(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    """Create a new forecast."""
+    """Create a new forecast manually."""
+    # Verify the product exists
+    product = db.query(Product).filter(Product.id == forecast.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
     db_forecast = Forecast(**forecast.model_dump())
     db.add(db_forecast)
     db.commit()

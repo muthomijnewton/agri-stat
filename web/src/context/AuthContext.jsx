@@ -7,21 +7,35 @@ const TOKEN_KEY = 'agristat_token'
 const USER_KEY  = 'agristat_user'
 
 // ---------------------------------------------------------------------------
-// Set the header synchronously at module load time so the very first API
-// call after a page refresh already carries the Bearer token.
+// Set the Authorization header synchronously at module load time so the very
+// first API call after a page refresh already carries the Bearer token.
 // ---------------------------------------------------------------------------
 const _storedToken = localStorage.getItem(TOKEN_KEY)
 if (_storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${_storedToken}`
 }
 
+// ---------------------------------------------------------------------------
+// JWT expiry helper — decodes the payload without a library dependency.
+// Returns true if the token has expired (or is unparseable).
+// ---------------------------------------------------------------------------
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (!payload.exp) return false          // no exp claim → treat as valid
+    return Date.now() / 1000 >= payload.exp // compare Unix timestamps
+  } catch {
+    return true                             // malformed token → treat as expired
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const [user,  setUser]  = useState(() => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)) } catch { return null }
   })
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? null)
 
-  // Keep the header in sync whenever the token state changes
+  // ── Keep Authorization header in sync with token state ──────────────────
   useEffect(() => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -29,6 +43,39 @@ export function AuthProvider({ children }) {
       delete api.defaults.headers.common['Authorization']
     }
   }, [token])
+
+  // ── On boot: validate the stored token against the server ────────────────
+  // 1. If the JWT itself has expired client-side → clear immediately (no network call)
+  // 2. Otherwise call GET /auth/me to confirm the session is still valid and
+  //    refresh the user object in case profile data changed on another device.
+  useEffect(() => {
+    const storedToken = localStorage.getItem(TOKEN_KEY)
+    if (!storedToken) return
+
+    if (isTokenExpired(storedToken)) {
+      _clearAuth()
+      return
+    }
+
+    api.get('/auth/me')
+      .then(({ data }) => {
+        // Merge fresh server data into localStorage + state
+        localStorage.setItem(USER_KEY, JSON.stringify(data))
+        setUser(data)
+      })
+      .catch(() => {
+        // 401 / network error — force logout so the UI stays consistent
+        _clearAuth()
+      })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function _clearAuth() {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+    delete api.defaults.headers.common['Authorization']
+    setToken(null)
+    setUser(null)
+  }
 
   function login(userData) {
     const { access_token, ...rest } = userData
@@ -41,11 +88,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
-    delete api.defaults.headers.common['Authorization']
-    setToken(null)
-    setUser(null)
+    _clearAuth()
   }
 
   /** Sync updated profile fields back into localStorage + state after PATCH /me */

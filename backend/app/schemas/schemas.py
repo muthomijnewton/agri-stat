@@ -98,6 +98,23 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     message: str = "Login successful"
 
+# ============== Register Schemas ==============
+class RegisterRequest(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
+
+class RegisterResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: Optional[str]
+    is_admin: bool
+    access_token: str
+    token_type: str = "bearer"
+    message: str = "Registration successful"
+
 # ============== Product Schemas ==============
 class ProductBase(BaseModel):
     name: str

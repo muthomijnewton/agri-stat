@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import RequireAuth from './components/RequireAuth'
 import NotificationBell from './components/NotificationBell'
 
+import Landing         from './pages/Landing'
+import Register        from './pages/Register'
 import Dashboard       from './pages/Dashboard'
 import Products        from './pages/Products'
 import Transactions    from './pages/Transactions'
@@ -11,6 +13,7 @@ import Forecasts       from './pages/Forecasts'
 import Recommendations from './pages/Recommendations'
 import Analytics       from './pages/Analytics'
 import Login           from './pages/Login'
+import Import         from './pages/Import'
 import Profile         from './pages/Profile'
 
 import './css/App.css'
@@ -85,6 +88,15 @@ function IconBarChart2() {
   )
 }
 
+function IconUpload() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+    </svg>
+  )
+}
+
 /* ---- Navbar ---- */
 
 function Navbar() {
@@ -100,7 +112,7 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand">
+      <Link to="/dashboard" className="navbar-brand">
         <div className="navbar-brand-icon">
           <IconLeaf />
         </div>
@@ -109,7 +121,7 @@ function Navbar() {
 
       <ul className="nav-links">
         <li>
-          <NavLink to="/" end>
+          <NavLink to="/dashboard" end>
             <IconGrid /><span>Dashboard</span>
           </NavLink>
         </li>
@@ -136,6 +148,11 @@ function Navbar() {
         <li>
           <NavLink to="/analytics">
             <IconBarChart2 /><span>Analytics</span>
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/import">
+            <IconUpload /><span>Import</span>
           </NavLink>
         </li>
         <li>
@@ -170,16 +187,25 @@ function AppLayout() {
 
       <main className="main-content">
         <Routes>
+          {/* ── Public routes ── */}
+          <Route path="/" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />
+          } />
           <Route path="/login" element={
-            isAuthenticated ? <Navigate to="/" replace /> : <Login />
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          } />
+          <Route path="/register" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
           } />
 
-          <Route path="/"                element={<RequireAuth><Dashboard /></RequireAuth>} />
+          {/* ── Protected routes ── */}
+          <Route path="/dashboard"       element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/products"        element={<RequireAuth><Products /></RequireAuth>} />
           <Route path="/transactions"    element={<RequireAuth><Transactions /></RequireAuth>} />
           <Route path="/forecasts"       element={<RequireAuth><Forecasts /></RequireAuth>} />
           <Route path="/recommendations" element={<RequireAuth><Recommendations /></RequireAuth>} />
           <Route path="/analytics"       element={<RequireAuth><Analytics /></RequireAuth>} />
+          <Route path="/import"          element={<RequireAuth><Import /></RequireAuth>} />
           <Route path="/profile"         element={<RequireAuth><Profile /></RequireAuth>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

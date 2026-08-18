@@ -116,7 +116,7 @@ npm run dev
 Open `http://localhost:5173` in your browser.  
 API documentation: `http://localhost:8000/docs`
 
-Default login: `admin` / `admin123` (created by `init_db.py`)
+Default login: `admin@agri` / `1234` (created by `init_db.py`)
 
 ---
 

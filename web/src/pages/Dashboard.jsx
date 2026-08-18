@@ -59,10 +59,12 @@ function PieTooltip({ active, payload }) {
   )
 }
 
-/* ---- Axis tick: shorten date to "Jul 28" ---- */
+/* ---- Axis tick: shorten date to "Jul 28" — append T00:00:00 to force
+   local-time parsing. Without it, "2025-01-15" is treated as UTC midnight
+   and rendered as the previous day in UTC+3 and other positive-offset zones. ---- */
 function shortDate(str) {
   if (!str) return ''
-  const d = new Date(str)
+  const d = new Date(str + 'T00:00:00')
   return d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })
 }
 

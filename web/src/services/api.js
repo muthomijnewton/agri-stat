@@ -78,9 +78,11 @@ export const notificationsAPI = {
 // Auth
 // ---------------------------------------------------------------------------
 export const authAPI = {
-  login:         (username, password) => api.post('/auth/login', { username, password }),
-  getProfile:    ()                   => api.get('/auth/me'),
-  updateProfile: (data)               => api.patch('/auth/me', data),
+  login:         (username, password)               => api.post('/auth/login', { username, password }),
+  register:      (username, email, password, fullName) =>
+    api.post('/auth/register', { username, email, password, full_name: fullName ?? null }),
+  getProfile:    ()                                 => api.get('/auth/me'),
+  updateProfile: (data)                             => api.patch('/auth/me', data),
 }
 
 // ---------------------------------------------------------------------------
@@ -94,6 +96,34 @@ export const statsAPI = {
   forecastAccuracyTrend:    (limit = 20)                  => api.get(`/stats/forecast-accuracy-trend?limit=${limit}`),
   recommendationStatusBreakdown: ()                       => api.get('/stats/recommendation-status-breakdown'),
   topProductsByQuantity:    (days = 30, limit = 10)       => api.get(`/stats/top-products-by-quantity?days=${days}&limit=${limit}`),
+}
+
+// ---------------------------------------------------------------------------
+// CSV Import
+// ---------------------------------------------------------------------------
+export const importsAPI = {
+  /**
+   * Upload a CSV file to bulk-import transactions.
+   * @param {File} file
+   */
+  transactions: (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/imports/transactions', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  /**
+   * Upload a CSV file to bulk-import products.
+   * @param {File} file
+   */
+  products: (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/imports/products', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
 
 // ---------------------------------------------------------------------------

@@ -100,12 +100,12 @@ export default function Transactions() {
       setLoading(true)
       setError(null)
       const params = {}
-      if (filters.product_id)   params.product_id   = filters.product_id
-      if (filters.start_date)   params.start_date   = filters.start_date
-      if (filters.end_date)     params.end_date     = filters.end_date
-      // transaction_type is client-side filtered (backend doesn't support it as a query param)
+      if (filters.product_id)       params.product_id       = filters.product_id
+      if (filters.start_date)       params.start_date       = filters.start_date
+      if (filters.end_date)         params.end_date         = filters.end_date
+      if (filters.transaction_type) params.transaction_type = filters.transaction_type
       const [txns, prods] = await Promise.all([
-        transactionsAPI.getAll(0, 500, params),
+        transactionsAPI.getAll(0, 100, params),
         productsAPI.getAll(0, 100),
       ])
       setTransactions(txns.data)
@@ -119,12 +119,13 @@ export default function Transactions() {
 
   const applyFilters = () => {
     const f = {
-      product_id:   filterProduct   || undefined,
-      start_date:   filterStartDate || undefined,
-      end_date:     filterEndDate   || undefined,
+      product_id:       filterProduct   || undefined,
+      start_date:       filterStartDate || undefined,
+      end_date:         filterEndDate   || undefined,
+      transaction_type: filterType      || undefined,
     }
-    setAppliedFilters({ ...f, transaction_type: filterType || undefined })
-    setPage(1)
+    setAppliedFilters(f)
+    setPage(1)           // always reset to page 1 when filters change
     fetchData(f)
   }
 
@@ -138,10 +139,8 @@ export default function Transactions() {
     fetchData({})
   }
 
-  // Derived: apply client-side type filter on top of server results
-  const filtered = filterType
-    ? transactions.filter(t => t.transaction_type === filterType)
-    : transactions
+  // Server already filters by type — no client-side filtering needed
+  const filtered = transactions
 
   // Paginated slice
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
@@ -226,9 +225,10 @@ export default function Transactions() {
     try {
       setExporting(true)
       const f = {}
-      if (appliedFilters.product_id) f.product_id  = appliedFilters.product_id
-      if (appliedFilters.start_date) f.start_date   = appliedFilters.start_date
-      if (appliedFilters.end_date)   f.end_date     = appliedFilters.end_date
+      if (appliedFilters.product_id)       f.product_id       = appliedFilters.product_id
+      if (appliedFilters.start_date)       f.start_date       = appliedFilters.start_date
+      if (appliedFilters.end_date)         f.end_date         = appliedFilters.end_date
+      if (appliedFilters.transaction_type) f.transaction_type = appliedFilters.transaction_type
       await exportsAPI.transactions(f)
     } catch (err) {
       setError(err.response?.data?.detail ?? err.message)
@@ -323,12 +323,12 @@ export default function Transactions() {
         {/* Active filter summary */}
         {hasActiveFilters && (
           <p style={{ marginTop: '0.625rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Showing {filtered.length} of {transactions.length} transactions
+            Showing {transactions.length} result{transactions.length !== 1 ? 's' : ''}
             {filterType ? ` · ${filterType}s` : ''}
             {filterProduct ? ` · ${products.find(p => String(p.id) === String(filterProduct))?.name ?? ''}` : ''}
             {filterStartDate ? ` · from ${filterStartDate}` : ''}
             {filterEndDate   ? ` · to ${filterEndDate}` : ''}
-            {' '}— <em>Export CSV will use these filters</em>
+            {' '}— <em>Export CSV will match these filters</em>
           </p>
         )}
       </div>

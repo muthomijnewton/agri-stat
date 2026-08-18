@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.models import User
-from app.schemas.schemas import LoginRequest, LoginResponse, UserProfileResponse, UserProfileUpdate
+from app.schemas.schemas import (
+    LoginRequest, LoginResponse,
+    RegisterRequest, RegisterResponse,
+    UserProfileResponse, UserProfileUpdate,
+)
 from app.core.security import (
     create_access_token,
     get_current_user,
@@ -76,6 +80,61 @@ def verify_user(request: Request, credentials: LoginRequest, db: Session = Depen
     """
     return login(request, credentials, db)
 
+
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
+def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
+    """
+    Create a new user account and return a JWT token so the user is
+    immediately signed in after registration.
+    """
+    # Check uniqueness
+    if db.query(User).filter(User.username == body.username).first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already taken.",
+        )
+    if db.query(User).filter(User.email == body.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with that email already exists.",
+        )
+
+    if len(body.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Password must be at least 6 characters.",
+        )
+
+    new_user = User(
+        username=body.username,
+        email=body.email,
+        password=get_password_hash(body.password),
+        full_name=body.full_name,
+        is_admin=False,
+        is_active=True,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    access_token = create_access_token(
+        {
+            "sub": new_user.username,
+            "user_id": new_user.id,
+            "is_admin": new_user.is_admin,
+        }
+    )
+
+    return RegisterResponse(
+        id=new_user.id,
+        username=new_user.username,
+        email=new_user.email,
+        full_name=new_user.full_name,
+        is_admin=new_user.is_admin,
+        access_token=access_token,
+        message="Registration successful",
+    )
 
 # ---------------------------------------------------------------------------
 # Profile endpoints
