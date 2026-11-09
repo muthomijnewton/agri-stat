@@ -1,6 +1,6 @@
 # AgricStat Dash
 
-AgricStat Dash is a full-stack platform for demand forecasting, inventory optimization, and operational analytics in agricultural supply chains. It is developed as part of INSY 492 (Senior Project, 2026) at the University of Eastern Africa, Baraton.
+AgricStat Dash is a full-stack platform for demand forecasting, inventory optimization, and operational analytics in agricultural supply chains. 
 
 The repository contains a FastAPI backend, a React web frontend, and a Flutter mobile client.
 
