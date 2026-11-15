@@ -29,7 +29,7 @@ This guide describes the system actually implemented as of 15 November 2026. The
 | Local Overpass | Answers questions about the imported Kenya OpenStreetMap roads and their tags. | Road-surface inspection cannot complete. Existing inspection records remain in PostgreSQL. |
 | External OSRM | Supplies a candidate route geometry between coordinates. | New route calculations may fail even when local Overpass is healthy. |
 | Open-Meteo | Supplies forecast weather and historical reanalysis from outside the app. | Weather-dependent work reports missing/unavailable inputs rather than inventing them. |
-| HDX/KAMIS | Public sources for market observations. | Refreshes can fail while previously imported observations remain visible with dates. |
+| KAMIS | Enabled public source for market observations. HDX/WFP is retired. | Refreshes can fail while previously imported observations remain visible with dates. |
 | Alembic migration service | Updates the structure of database tables to match a new software version. | New code may fail if its required tables do not exist. |
 
 The app now uses Next.js to host the React workspace. React Router remains the client routing bridge during this incremental migration. It runs on this computer, not a public hosting service. `localhost` means the computer on which the address is opened; another person's phone will not reach your laptop by entering that address.

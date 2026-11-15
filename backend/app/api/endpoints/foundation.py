@@ -176,31 +176,37 @@ def weather(location_id: UUID, limit: int = Query(60, ge=1, le=365), db: Session
 
 @router.get("/market-observations")
 def markets(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500), db: Session = Depends(get_db), user=Depends(get_current_user)):
-    return scoped(db, MarketObservation, user).order_by(MarketObservation.date.desc(), MarketObservation.id).offset(skip).limit(limit).all()
+    return scoped(db, MarketObservation, user).filter_by(source="kamis").order_by(MarketObservation.date.desc(), MarketObservation.id).offset(skip).limit(limit).all()
 
 
 @router.get("/market-summary")
 def market_summary(db: Session = Depends(get_db), user=Depends(get_current_user)):
     summaries = db.query(MarketObservation.source, func.count(MarketObservation.id),
-                         func.max(MarketObservation.date)).filter_by(organization_id=user.organization_id).group_by(MarketObservation.source).all()
+                         func.max(MarketObservation.date)).filter_by(organization_id=user.organization_id, source="kamis").group_by(MarketObservation.source).all()
     result = []
     for source, count, latest in summaries:
         run = scoped(db, ImportRun, user).filter_by(source=source).order_by(ImportRun.imported_at.desc()).first()
         result.append({"source": source, "observations": count, "latest_date": latest,
                        "last_refreshed": run.imported_at if run else None, "source_url": run.source_url if run else None})
-    return {"sources": result, "markets": scoped(db, Location, user).filter_by(location_type="MARKET").count()}
+    return {"sources": result, "markets": scoped(db, MarketObservation, user).filter_by(source="kamis").with_entities(MarketObservation.location_id).distinct().count()}
 
 
 @router.get("/market-prices")
 def market_prices(q: str = Query("", max_length=100), source: str | None = None,
+                  location: str = Query("", max_length=100), product: str = Query("", max_length=100),
                   skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=500),
                   db: Session = Depends(get_db), user=Depends(get_current_user)):
     query = db.query(MarketObservation, Location.name, Product.name, ImportRun.source_url, ImportRun.imported_at).join(
         Location, Location.id == MarketObservation.location_id).join(
         Product, Product.id == MarketObservation.product_id).join(
-        ImportRun, ImportRun.id == MarketObservation.import_run_id).filter(MarketObservation.organization_id == user.organization_id)
+        ImportRun, ImportRun.id == MarketObservation.import_run_id).filter(MarketObservation.organization_id == user.organization_id, MarketObservation.source == "kamis")
+    def literal(value):
+        return value.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    for column, value in ((Location.name, location), (Product.name, product)):
+        if value.strip():
+            query = query.filter(column.ilike(f"%{literal(value)}%", escape="\\"))
     if q.strip():
-        term = q.strip().replace("%", "\\%").replace("_", "\\_")
+        term = literal(q)
         query = query.filter(Product.name.ilike(f"%{term}%", escape="\\") | Location.name.ilike(f"%{term}%", escape="\\"))
     if source:
         query = query.filter(MarketObservation.source == source)

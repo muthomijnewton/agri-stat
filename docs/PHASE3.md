@@ -10,7 +10,7 @@ Phase 3 adds the web workspace for a farm selling its produce. The browser now r
 | Stock & sales | Record actual harvest batches and sales | PostgreSQL transactions, including FEFO stock allocation |
 | Demand planning | Confirm daily history, validate models and review recommendations | Confirmed sales history, weather and saved model runs |
 | Roads & weather | Explore known locations, inspected corridors and weather estimates | Saved road inspections and weather observations |
-| Market prices | Compare published observations with their source dates | Public HDX/WFP and KAMIS records; never private farm sales |
+| Market prices | Compare published observations with their source dates | Published KAMIS records; never private farm sales |
 | Import farm history | Preview and import genuine historical daily totals | Administrator-selected CSV, validated before saving |
 
 Earlier screens remain accessible under **Earlier records**. Their legacy transaction ledger is separate from the farm ledger; the overview does not silently combine them.
@@ -112,3 +112,15 @@ On 15 November 2026, after rebuilding the Docker stack, all three Phase 3 endpoi
 The deployed overview below shows the actual empty farm ledger alongside existing public location data. Sign-out, sign-in and the action-card dismissal were also verified.
 
 ![Deployed overview before adding real farm records](images/phase3-live-overview.jpg)
+
+## Market search update — 15 November 2026
+
+Market prices now uses KAMIS only. HDX/WFP is disabled in refresh jobs and the command-line import entry point, and excluded from price listings, observation listings, summaries and market counts. Previously stored historical observations remain archived; they do not contribute to this page. Existing location records are preserved because other workflows can reference them.
+
+Use **Location or market** and **Product** together to narrow the results, for example Nairobi and tomatoes. Both filters must match. The original **Product or market** general search remains available and further narrows the result when used. Searches are case-insensitive partial-name matches across all stored KAMIS quotes, before pagination. **Clear filters** restores all KAMIS results. Missing matches are reported without substituting a different location or product.
+
+Only the seven configured commodities and the publisher's fetched pages are covered. Always check the published date; a recent download does not make an older quote current. These are market quotes, not the farm's recorded sales.
+
+Verified against the deployed PostgreSQL API: 1,428 KAMIS observations across 54 markets; Embu + tomato returned six matching quotes, an unmatched product returned none, and an explicit HDX query returned none. The 31 foundation tests, production web build and six contrast checks passed.
+
+![Combined location and product search using published KAMIS quotes](images/market-location-product-search.jpg)

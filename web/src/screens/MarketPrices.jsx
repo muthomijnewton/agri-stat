@@ -3,7 +3,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import '../css/market-prices.css'
 
-const SOURCE_NAMES = { kamis: 'KAMIS · Kenya Ministry of Agriculture', hdx: 'HDX · World Food Programme' }
+const SOURCE_NAMES = { kamis: 'KAMIS · Kenya Ministry of Agriculture' }
 const PAGE_SIZE = 50
 
 export default function MarketPrices() {
@@ -12,7 +12,9 @@ export default function MarketPrices() {
   const [data, setData] = useState({ items: [], total: 0 })
   const [query, setQuery] = useState('')
   const [search, setSearch] = useState('')
-  const [source, setSource] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
+  const [productQuery, setProductQuery] = useState('')
+  const [filters, setFilters] = useState({ location: '', product: '' })
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -65,14 +67,14 @@ export default function MarketPrices() {
     setError('')
     Promise.all([
       api.get('/v1/market-summary'),
-      api.get('/v1/market-prices', { params: { q: search, source: source || undefined, skip: page * PAGE_SIZE, limit: PAGE_SIZE } }),
+      api.get('/v1/market-prices', { params: { q: search, source: 'kamis', ...filters, skip: page * PAGE_SIZE, limit: PAGE_SIZE } }),
     ]).then(([overview, prices]) => {
-      if (active) { setSummary(overview.data); setData(prices.data) }
+      if (active) { setSummary({ ...overview.data, sources: overview.data.sources.filter(item => item.source === 'kamis') }); setData(prices.data) }
     }).catch(err => {
       if (active) setError(err.response?.data?.detail || 'Could not load market prices. Check that the backend is running.')
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [search, source, page, revision])
+  }, [search, filters, page, revision])
 
   return <div className="container market-page">
     <div className="page-header">
@@ -89,18 +91,18 @@ export default function MarketPrices() {
         <a href={item.source_url} target="_blank" rel="noreferrer">View original source ↗</a>
       </section>)}
     </div>
-    <p className="market-note">These are public market quotes. Sales, revenue and stock figures populate when you record your own business activity. HDX contains monthly history; KAMIS supplies recent published pages for seven staple and vegetable commodities.</p>
-    <form className="market-controls" onSubmit={event => { event.preventDefault(); setSearch(query.trim()); setPage(0) }}>
-      <label>Product or market<input value={query} onChange={event => setQuery(event.target.value)} placeholder="For example, maize or Nairobi" /></label>
-      <label>Source<select value={source} onChange={event => { setSource(event.target.value); setPage(0) }}>
-        <option value="">All sources</option><option value="kamis">KAMIS</option><option value="hdx">HDX / WFP</option>
-      </select></label>
+    <p className="market-note">These are public market quotes. Sales, revenue and stock figures populate when you record your own business activity. KAMIS supplies published pages for seven staple and vegetable commodities. Check the published date: a fresh retrieval does not mean every quote is from today.</p>
+    <form className="market-controls" onSubmit={event => { event.preventDefault(); setSearch(query.trim()); setFilters({ location: locationQuery.trim(), product: productQuery.trim() }); setPage(0) }}>
+      <label>Product or market<input value={query} onChange={event => setQuery(event.target.value)} placeholder="Any product or market" maxLength={100} /></label>
+      <label>Location or market<input value={locationQuery} onChange={event => setLocationQuery(event.target.value)} placeholder="For example, Nairobi" maxLength={100} /></label>
+      <label>Product<input value={productQuery} onChange={event => setProductQuery(event.target.value)} placeholder="For example, tomatoes" maxLength={100} /></label>
       <button className="btn btn-primary" type="submit">Search</button>
+      <button type="button" onClick={() => { setQuery(''); setSearch(''); setLocationQuery(''); setProductQuery(''); setFilters({ location: '', product: '' }); setPage(0) }}>Clear filters</button>
     </form>
     {error && <p role="alert" className="error">{error}</p>}
     {loading ? <p role="status">Loading market prices…</p> : <>
-      <p>{data.total.toLocaleString()} matching price records · {summary.markets} markets in the catalog</p>
-      {data.items.length === 0 ? <p>No published prices match this search.</p> : <div className="market-table-wrap">
+      <p>{data.total.toLocaleString()} matching price records · {summary.markets} markets with KAMIS quotes</p>
+      {data.items.length === 0 ? <p>No published prices match these filters. Try a broader location or product name.</p> : <div className="market-table-wrap">
         <table className="market-table"><thead><tr><th>Product</th><th>Market</th><th>Published date</th><th>Price per unit</th><th>Quote</th><th>Source</th></tr></thead>
           <tbody>{data.items.map(item => <tr key={item.id}>
             <td>{item.product}</td><td>{item.market}</td><td>{item.date}</td>

@@ -32,10 +32,12 @@ for routine maintenance: it deletes the saved databases.
 
 ## Market data
 
+Update, 15 November 2026: KAMIS is the only enabled market-price source. HDX/WFP is excluded from the application’s price results and refresh jobs. The earlier import totals below are historical verification evidence, not active coverage.
+
 The Market prices page shows source links, publication dates and retrieval times. Administrators
 can use **Fetch latest prices**. Failed imports leave previously committed records intact.
 
-- HDX/WFP supplies monthly Kenyan food-price history. The verified PostgreSQL import has 29,298
+- HDX/WFP previously supplied monthly Kenyan food-price history. The verified PostgreSQL import has 29,298
   records, with the latest observation dated 15 October 2026.
 - KAMIS supplies recent published pages for seven commodities: maize, tomatoes, Irish potatoes,
   Rosecoco beans, cabbage, dry onions and kale. The verified fresh import has 1,265 distinct quotes,
