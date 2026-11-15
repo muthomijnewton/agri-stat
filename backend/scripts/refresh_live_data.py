@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the enabled KAMIS market pages, then upsert atomically."""
+"""Fetch HDX/WFP history and the latest KAMIS market page, then upsert atomically."""
 import argparse
 import json
 from pathlib import Path

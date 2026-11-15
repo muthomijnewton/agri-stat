@@ -251,38 +251,40 @@ def test_live_market_api_shows_provenance(admin_client, db, organization):
     import_market_rows(db, rows, source="kamis", source_url="https://kamis.kilimo.go.ke/site/market",
                       content_sha256="b" * 64, organization_id=organization.id)
     db.commit()
-    result = admin_client.get("/api/v1/market-prices?q=maize").json()
+    result = admin_client.get("/api/v1/market-prices?q=maize&source=kamis").json()
     assert result["total"] == 1
     assert result["items"][0]["market"] == "Meru"
     assert result["items"][0]["source"] == "kamis"
     assert result["items"][0]["source_url"].startswith("https://kamis.kilimo.go.ke/")
-    assert admin_client.get("/api/v1/market-prices?source=hdx").json()["total"] == 0
-    assert all(r["source"] == "kamis" for r in admin_client.get("/api/v1/market-observations").json())
+    assert admin_client.get("/api/v1/market-prices?source=hdx").json()["total"] == 1
+    assert {r["source"] for r in admin_client.get("/api/v1/market-observations").json()} == {"hdx", "kamis"}
     summary = admin_client.get("/api/v1/market-summary").json()
-    assert len(summary["sources"]) == 1 and summary["sources"][0]["source"] == "kamis"
+    assert {r["source"] for r in summary["sources"]} == {"hdx", "kamis"}
     assert summary["sources"][0]["observations"] == 1 and summary["markets"] == 1
-    for params, expected in [({"location":"mer", "product":"MAIZE"},1),
+    for params, expected in [({"location":"mer", "product":"MAIZE"},2),
                              ({"location":"Nairobi", "product":"maize"},0),
                              ({"location":"Meru", "product":"tomato"},0),
                              ({"location":"%"},0), ({"product":"_"},0)]:
         assert admin_client.get("/api/v1/market-prices",params=params).json()["total"] == expected
 
 
-def test_live_refresh_only_downloads_kamis():
-    from app.services.live_market_service import prepare_live_sources, KAMIS_URLS
+def test_live_refresh_downloads_both_sources():
+    from app.services.live_market_service import prepare_live_sources, KAMIS_URLS, HDX_URL
     calls=[]
     def fetch(url):
         calls.append(url)
+        if url == HDX_URL: return HDX
         return b'<table><tr><th>Commodity</th><th>Market</th><th>Date</th><th>Wholesale</th><th>Retail</th></tr><tr><td>Maize</td><td>Meru</td><td>2026-11-11</td><td>-</td><td>50/Kg</td></tr></table>'
     sources=prepare_live_sources(fetch=fetch)
-    assert calls == KAMIS_URLS
-    assert sources and all(s["source"] == "kamis" for s in sources)
+    assert calls == [HDX_URL] + KAMIS_URLS
+    assert {s["source"] for s in sources} == {"hdx", "kamis"}
 
 
-def test_disabled_source_cannot_be_loaded(db, organization):
+def test_hdx_source_can_be_loaded(db, organization):
     from app.services.live_market_service import load_live_sources
-    with pytest.raises(ValueError,match="Only KAMIS"):
-        load_live_sources(db,[{"source":"hdx"}],organization_id=organization.id)
+    result=load_live_sources(db,[{"source":"hdx", "source_url":"https://data.humdata.org/dataset/example",
+        "content_sha256":"c"*64,"rows":parse_rows(HDX,"hdx"),"rejects":[]}],organization_id=organization.id)
+    assert result[0]["source"] == "hdx"
 
 
 def test_explicit_demo_reset_retains_accounts(db, organization, auth_user, sample_product):

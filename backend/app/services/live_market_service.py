@@ -15,6 +15,7 @@ from app.models.operations import SaleAllocation, SalesOrderItem, SalesOrder
 from app.models.models import Forecast, InventoryRecommendation, Notification, Product, Transaction
 from app.services.real_data import MAX_BYTES, import_market_rows, parse_rows
 
+HDX_URL = "https://data.humdata.org/dataset/e0d3fba6-f9a2-45d7-b949-140c455197ff/resource/517ee1bf-2437-4f8c-aa1b-cb9925b9d437/download/wfp_food_prices_ken.csv"
 KAMIS_PRODUCTS = (1, 61, 163, 64, 58, 158, 154)  # maize, tomatoes, potatoes, beans, cabbage, onions, kale
 KAMIS_URLS = [f"https://kamis.kilimo.go.ke/site/market?product={product}&per_page=100" for product in KAMIS_PRODUCTS]
 
@@ -73,9 +74,9 @@ def download(url):
 
 
 def prepare_live_sources(*, fetch=download, cache_directory=None):
-    """Download and validate active KAMIS pages before any business records are changed."""
+    """Download and validate both sources before any business records are changed."""
     sources = []
-    for index, (source, url) in enumerate([("kamis", url) for url in KAMIS_URLS]):
+    for index, (source, url) in enumerate([("hdx", HDX_URL)] + [("kamis", url) for url in KAMIS_URLS]):
         raw = fetch(url)
         content = kamis_csv(raw.decode("utf-8")) if source == "kamis" else raw
         rejects = []
@@ -106,8 +107,6 @@ def clear_demo_business_data(db, organization_id):
 
 
 def load_live_sources(db, sources, *, organization_id, replace_demo=False):
-    if any(dataset["source"] != "kamis" for dataset in sources):
-        raise ValueError("Only KAMIS market data is enabled")
     if replace_demo:
         clear_demo_business_data(db, organization_id)
     results = []

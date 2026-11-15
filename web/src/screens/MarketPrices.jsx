@@ -3,15 +3,14 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import '../css/market-prices.css'
 
-const SOURCE_NAMES = { kamis: 'KAMIS · Kenya Ministry of Agriculture' }
+const SOURCE_NAMES = { kamis: 'KAMIS · Kenya Ministry of Agriculture', hdx: 'HDX / WFP · Monthly price history' }
 const PAGE_SIZE = 50
 
 export default function MarketPrices() {
   const { user } = useAuth()
   const [summary, setSummary] = useState({ sources: [], markets: 0 })
   const [data, setData] = useState({ items: [], total: 0 })
-  const [query, setQuery] = useState('')
-  const [search, setSearch] = useState('')
+  const [source, setSource] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [productQuery, setProductQuery] = useState('')
   const [filters, setFilters] = useState({ location: '', product: '' })
@@ -67,14 +66,14 @@ export default function MarketPrices() {
     setError('')
     Promise.all([
       api.get('/v1/market-summary'),
-      api.get('/v1/market-prices', { params: { q: search, source: 'kamis', ...filters, skip: page * PAGE_SIZE, limit: PAGE_SIZE } }),
+      api.get('/v1/market-prices', { params: { source: source || undefined, ...filters, skip: page * PAGE_SIZE, limit: PAGE_SIZE } }),
     ]).then(([overview, prices]) => {
-      if (active) { setSummary({ ...overview.data, sources: overview.data.sources.filter(item => item.source === 'kamis') }); setData(prices.data) }
+      if (active) { setSummary(overview.data); setData(prices.data) }
     }).catch(err => {
       if (active) setError(err.response?.data?.detail || 'Could not load market prices. Check that the backend is running.')
     }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [search, filters, page, revision])
+  }, [source, filters, page, revision])
 
   return <div className="container market-page">
     <div className="page-header">
@@ -86,26 +85,28 @@ export default function MarketPrices() {
       {summary.sources.map(item => <section className="market-source-card" key={item.source}>
         <h2>{SOURCE_NAMES[item.source] || item.source}</h2>
         <strong>{item.observations.toLocaleString()} price records</strong>
-        <p>Latest published date: <b>{item.latest_date}</b></p>
+        <p>{item.source === 'hdx' ? 'Latest observation month' : 'Latest published date'}: <b>{item.source === 'hdx' ? item.latest_date.slice(0, 7) : item.latest_date}</b></p>
         <p>Retrieved: {item.last_refreshed ? new Date(item.last_refreshed.endsWith('Z') || /[+-]\d\d:\d\d$/.test(item.last_refreshed) ? item.last_refreshed : item.last_refreshed + 'Z').toLocaleString('en-KE') : 'Not yet'}</p>
         <a href={item.source_url} target="_blank" rel="noreferrer">View original source ↗</a>
       </section>)}
     </div>
-    <p className="market-note">These are public market quotes. Sales, revenue and stock figures populate when you record your own business activity. KAMIS supplies published pages for seven staple and vegetable commodities. Check the published date: a fresh retrieval does not mean every quote is from today.</p>
-    <form className="market-controls" onSubmit={event => { event.preventDefault(); setSearch(query.trim()); setFilters({ location: locationQuery.trim(), product: productQuery.trim() }); setPage(0) }}>
-      <label>Product or market<input value={query} onChange={event => setQuery(event.target.value)} placeholder="Any product or market" maxLength={100} /></label>
+    <p className="market-note">These are public market quotes. Sales, revenue and stock figures populate when you record your own business activity. HDX/WFP provides monthly historical price observations for comparing trends over time. KAMIS supplies published pages for seven staple and vegetable commodities. Check the published date: a fresh retrieval does not mean every quote is from today.</p>
+    <form className="market-controls" onSubmit={event => { event.preventDefault(); setFilters({ location: locationQuery.trim(), product: productQuery.trim() }); setPage(0) }}>
       <label>Location or market<input value={locationQuery} onChange={event => setLocationQuery(event.target.value)} placeholder="For example, Nairobi" maxLength={100} /></label>
       <label>Product<input value={productQuery} onChange={event => setProductQuery(event.target.value)} placeholder="For example, tomatoes" maxLength={100} /></label>
+      <label>Source<select value={source} onChange={event => { setSource(event.target.value); setPage(0) }}>
+        <option value="">All sources</option><option value="kamis">KAMIS</option><option value="hdx">HDX / WFP · Monthly history</option>
+      </select></label>
       <button className="btn btn-primary" type="submit">Search</button>
-      <button type="button" onClick={() => { setQuery(''); setSearch(''); setLocationQuery(''); setProductQuery(''); setFilters({ location: '', product: '' }); setPage(0) }}>Clear filters</button>
+      <button type="button" onClick={() => { setSource(''); setLocationQuery(''); setProductQuery(''); setFilters({ location: '', product: '' }); setPage(0) }}>Clear filters</button>
     </form>
     {error && <p role="alert" className="error">{error}</p>}
     {loading ? <p role="status">Loading market prices…</p> : <>
-      <p>{data.total.toLocaleString()} matching price records · {summary.markets} markets with KAMIS quotes</p>
+      <p>{data.total.toLocaleString()} matching price records · {summary.markets} markets with published quotes</p>
       {data.items.length === 0 ? <p>No published prices match these filters. Try a broader location or product name.</p> : <div className="market-table-wrap">
-        <table className="market-table"><thead><tr><th>Product</th><th>Market</th><th>Published date</th><th>Price per unit</th><th>Quote</th><th>Source</th></tr></thead>
+        <table className="market-table"><thead><tr><th>Product</th><th>Market</th><th>Observation date / period</th><th>Price per unit</th><th>Quote</th><th>Source</th></tr></thead>
           <tbody>{data.items.map(item => <tr key={item.id}>
-            <td>{item.product}</td><td>{item.market}</td><td>{item.date}</td>
+            <td>{item.product}</td><td>{item.market}</td><td>{item.source === 'hdx' ? `${item.date.slice(0, 7)} · monthly` : item.date}</td>
             <td>{item.currency} {Number(item.price).toLocaleString('en-KE', { maximumFractionDigits: 2, minimumFractionDigits: 2 })} / {item.unit}</td>
             <td>{item.price_type}</td><td><a href={item.source_url} target="_blank" rel="noreferrer">{item.source.toUpperCase()} ↗</a></td>
           </tr>)}</tbody>

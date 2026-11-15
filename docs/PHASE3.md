@@ -10,7 +10,7 @@ Phase 3 adds the web workspace for a farm selling its produce. The browser now r
 | Stock & sales | Record actual harvest batches and sales | PostgreSQL transactions, including FEFO stock allocation |
 | Demand planning | Confirm daily history, validate models and review recommendations | Confirmed sales history, weather and saved model runs |
 | Roads & weather | Explore known locations, inspected corridors and weather estimates | Saved road inspections and weather observations |
-| Market prices | Compare published observations with their source dates | Published KAMIS records; never private farm sales |
+| Market prices | Compare published observations with their source dates | Published KAMIS quotes and HDX/WFP monthly history; never private farm sales |
 | Import farm history | Preview and import genuine historical daily totals | Administrator-selected CSV, validated before saving |
 
 Earlier screens remain accessible under **Earlier records**. Their legacy transaction ledger is separate from the farm ledger; the overview does not silently combine them.
@@ -113,14 +113,16 @@ The deployed overview below shows the actual empty farm ledger alongside existin
 
 ![Deployed overview before adding real farm records](images/phase3-live-overview.jpg)
 
-## Market search update — 15 November 2026
+## Market search — location, product and source
 
-Market prices now uses KAMIS only. HDX/WFP is disabled in refresh jobs and the command-line import entry point, and excluded from price listings, observation listings, summaries and market counts. Previously stored historical observations remain archived; they do not contribute to this page. Existing location records are preserved because other workflows can reference them.
+Use **Location or market** and **Product** together to narrow results. Both are case-insensitive partial-name searches and both must match when entered. The redundant combined search field has been removed. **Clear filters** resets both search fields and the source selection.
 
-Use **Location or market** and **Product** together to narrow the results, for example Nairobi and tomatoes. Both filters must match. The original **Product or market** general search remains available and further narrows the result when used. Searches are case-insensitive partial-name matches across all stored KAMIS quotes, before pagination. **Clear filters** restores all KAMIS results. Missing matches are reported without substituting a different location or product.
+**All sources** includes KAMIS and HDX/WFP. Choose **KAMIS** for its published market quotes or **HDX / WFP · Monthly history** for historical monthly observations. Both sources participate in manual and scheduled refreshes. Existing HDX records were retained and are available again.
 
-Only the seven configured commodities and the publisher's fetched pages are covered. Always check the published date; a recent download does not make an older quote current. These are market quotes, not the farm's recorded sales.
+HDX rows show their observation month explicitly, rather than implying a daily quote. Its source card displays the latest observation month separately from the retrieval timestamp. KAMIS rows retain their published dates. Recent retrieval does not imply that all observations describe today's prices. Neither source supplies your farm's private sales or inventory.
 
-Verified against the deployed PostgreSQL API: 1,428 KAMIS observations across 54 markets; Embu + tomato returned six matching quotes, an unmatched product returned none, and an explicit HDX query returned none. The 31 foundation tests, production web build and six contrast checks passed.
+Searches apply before pagination across stored observations. The market count represents distinct locations with observations across the sources. Source coverage and available products differ; an empty result means no stored quotes match those filters.
 
-![Combined location and product search using published KAMIS quotes](images/market-location-product-search.jpg)
+![Market search with monthly HDX/WFP history restored](images/market-location-product-search.jpg)
+
+Restoration verified on 15 November 2026: the deployed API returned both source summaries (29,298 HDX/WFP observations and 1,428 KAMIS quotes). A HongKong market + Maize search returned 109 monthly HDX observations, including partial-name matches such as maize flour. The 31 foundation tests, production build and six contrast checks passed.

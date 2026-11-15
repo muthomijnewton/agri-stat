@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import an attributed normalized KAMIS CSV atomically."""
+"""Import an attributed HDX/WFP or normalized KAMIS CSV atomically."""
 import argparse
 import csv
 import hashlib
@@ -16,7 +16,7 @@ from app.db.database import SessionLocal
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", choices=["kamis"], required=True)
+    parser.add_argument("--source", choices=["hdx", "kamis"], required=True)
     parser.add_argument("--file", type=Path, required=True)
     parser.add_argument("--source-url", required=True, help="Original public dataset URL for provenance")
     parser.add_argument("--organization", default=DEFAULT_ORGANIZATION_ID)
