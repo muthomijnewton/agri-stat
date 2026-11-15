@@ -279,7 +279,7 @@ export default function Products() {
               <tr key={product.id} className={editingId === product.id ? 'row-editing' : ''}>
                 <td>{product.name}</td>
                 <td>{product.category || '—'}</td>
-                <td>KES {Number(product.unit_price || 0).toFixed(2)}</td>
+                <td>{product.unit_price == null ? 'Not set' : `KES ${Number(product.unit_price).toFixed(2)}`}</td>
                 <td>{product.unit || '—'}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.4rem' }}>

@@ -10,7 +10,7 @@ const USER_KEY  = 'agristat_user'
 // Set the Authorization header synchronously at module load time so the very
 // first API call after a page refresh already carries the Bearer token.
 // ---------------------------------------------------------------------------
-const _storedToken = localStorage.getItem(TOKEN_KEY)
+const _storedToken = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
 if (_storedToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${_storedToken}`
 }
@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const [user,  setUser]  = useState(() => {
     try { return JSON.parse(localStorage.getItem(USER_KEY)) } catch { return null }
   })
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) ?? null)
+  const [token, setToken] = useState(() => typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null)
 
   // ── Keep Authorization header in sync with token state ──────────────────
   useEffect(() => {

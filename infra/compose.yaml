@@ -1,0 +1,118 @@
+name: agricstat-phase1
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile
+  image: agricstat-phase1-api:local
+  environment:
+    DATABASE_URL: postgresql+psycopg2://agristat:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infra/.env}@postgres:5432/agristat
+    SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in infra/.env}
+    REDIS_URL: redis://redis:6379/0
+    OVERPASS_URL: ${OVERPASS_URL:-https://overpass-api.de/api/interpreter}
+    APP_TIMEZONE: Africa/Nairobi
+    SEED_SAMPLE_DATA: "false"
+    ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+
+services:
+  postgres:
+    restart: unless-stopped
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: agristat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infra/.env}
+      POSTGRES_DB: agristat
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: ["postgres_data:/home/postgres/pgdata/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agristat -d agristat"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    restart: unless-stopped
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["127.0.0.1:6380:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  overpass:
+    image: wiktorn/overpass-api:v0.7.62.11@sha256:c94f965a02f835abbe574109ff1a58498e5c96254a349e36ed4819467d10e027
+    restart: unless-stopped
+    ports: ["127.0.0.1:8082:80"]
+    volumes:
+      - overpass_kenya_data:/db
+      - ./overpass-download.sh:/docker-entrypoint-initdb.d/10-agristat-download.sh:ro
+    mem_limit: 8g
+    cpus: 2
+    environment:
+      OVERPASS_MODE: init
+      OVERPASS_META: "no"
+      OVERPASS_PLANET_URL: https://download.geofabrik.de/africa/kenya-latest.osm.pbf
+      OVERPASS_DIFF_URL: https://download.geofabrik.de/africa/kenya-updates/
+      OVERPASS_PLANET_PREPROCESS: >-
+        mv /db/planet.osm.bz2 /db/planet.osm.pbf &&
+        osmium cat -o /db/planet.osm.bz2 /db/planet.osm.pbf &&
+        rm /db/planet.osm.pbf
+      OVERPASS_STOP_AFTER_INIT: "false"
+      OVERPASS_USE_AREAS: "false"
+      OVERPASS_COMPRESSION: gz
+      OVERPASS_FLUSH_SIZE: "4"
+      OVERPASS_UPDATE_SLEEP: "3600"
+      OVERPASS_FASTCGI_PROCESSES: "2"
+      OVERPASS_RATE_LIMIT: "2"
+      OVERPASS_SPACE: "2147483648"
+      OVERPASS_ALLOW_DUPLICATE_QUERIES: "yes"
+    healthcheck:
+      test: ["CMD", "/app/docker-healthcheck.sh"]
+      start_period: 2h
+      interval: 30s
+      timeout: 15s
+      retries: 5
+  migrate:
+    <<: *app
+    command: ["python", "init_db.py"]
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    restart: unless-stopped
+    <<: *app
+    ports: ["127.0.0.1:8001:8000"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+  worker:
+    restart: unless-stopped
+    <<: *app
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "-Q", "agricstat-phase1", "--loglevel=info", "--concurrency=2"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  market-worker:
+    restart: unless-stopped
+    <<: *app
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "-Q", "agricstat-markets", "--loglevel=info", "--concurrency=1"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  beat:
+    restart: unless-stopped
+    <<: *app
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
+volumes:
+  postgres_data:
+  redis_data:
+  overpass_kenya_data:

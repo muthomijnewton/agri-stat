@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -128,6 +129,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Low Stock Alert Banner ── */}
+      <p className="text-muted">Explore published Kenyan commodity prices on the <Link to="/market-prices">Market prices page</Link>. Record harvests and sales on the <Link to="/farm-operations">Farm stock &amp; sales page</Link>. The figures below summarize the separate Transactions records.</p>
       {lowStock.length > 0 && (
         <div className="low-stock-banner">
           <div className="low-stock-banner__header">

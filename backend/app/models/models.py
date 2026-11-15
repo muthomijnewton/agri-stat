@@ -1,13 +1,16 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric, Date, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric, Date, Text, UniqueConstraint, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
 from datetime import datetime
+from app.models.foundation import DEFAULT_ORGANIZATION_ID
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(String(36), ForeignKey("organizations.id"), nullable=False,
+                             default=DEFAULT_ORGANIZATION_ID, server_default=DEFAULT_ORGANIZATION_ID, index=True)
 
     # ==========================
     # ACCOUNT INFORMATION
@@ -109,6 +112,16 @@ class Product(Base):
     __tablename__ = "products"
     
     id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(String(36), ForeignKey("organizations.id"), nullable=False,
+                             default=DEFAULT_ORGANIZATION_ID, server_default=DEFAULT_ORGANIZATION_ID, index=True)
+    sku = Column(String(100))
+    shelf_life_days = Column(Integer)
+    optimal_temp_min_c = Column(Numeric(8, 3))
+    optimal_temp_max_c = Column(Numeric(8, 3))
+    __table_args__ = (
+        UniqueConstraint("organization_id", "sku", name="uq_product_org_sku"),
+        CheckConstraint("shelf_life_days IS NULL OR shelf_life_days > 0", name="ck_product_shelf_life"),
+    )
     name = Column(String(255), nullable=False, index=True)
     category = Column(String(100))
     description = Column(Text)

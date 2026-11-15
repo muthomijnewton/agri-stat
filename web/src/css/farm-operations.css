@@ -1,0 +1,28 @@
+.farm-page { max-width:1200px; margin:0 auto; padding:28px 20px; color:#183328; }
+.farm-page h1 { font-size:1.8rem; margin-bottom:8px; }
+.farm-intro { max-width:780px; line-height:1.6; margin-bottom:24px; }
+.farm-card { background:#fff; border:1px solid #cad8cf; border-radius:12px; padding:24px; margin-bottom:22px; }
+.farm-card h2 { font-size:1.2rem; margin:0 0 12px; }
+.farm-card p { line-height:1.6; margin:12px 0; }
+.farm-columns { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+.farm-page label { display:flex; flex-direction:column; gap:7px; margin-bottom:16px; font-weight:600; }
+.farm-page input,.farm-page select { border:1px solid #93a69b; border-radius:6px; padding:11px; min-height:44px; background:#fff; width:100%; color:#183328; }
+.farm-page button { background:#175b3d; color:white; border:0; border-radius:7px; padding:12px 18px; min-height:44px; cursor:pointer; }
+.farm-page button:disabled { opacity:.55; cursor:wait; }
+.farm-page fieldset { border:0; padding:0; margin:0; min-width:0; }
+.farm-page details { margin-top:16px; }
+.farm-page summary { cursor:pointer; font-weight:600; padding:10px 0; }
+.farm-page .farm-form { margin-top:16px; }
+.farm-help { color:#465c50; font-size:.9rem; }
+.farm-error,.farm-success { border-radius:8px; padding:16px; margin-bottom:18px; line-height:1.5; }
+.farm-error { background:#fff0ed; border:1px solid #b9442d; color:#7c2617; }
+.farm-success { background:#e8f6ed; border:1px solid #3d8058; color:#17462a; }
+.farm-table { overflow:auto; }
+.farm-table table { border-collapse:collapse; width:100%; }
+.farm-table th,.farm-table td { text-align:left; padding:12px; border-bottom:1px solid #dbe4df; }
+.farm-sale { border-top:1px solid #dbe4df; padding-top:8px; }
+@media(max-width:740px) { .farm-columns { grid-template-columns:1fr; gap:0; } .farm-card { padding:18px; } .farm-page { padding:20px 12px; } }
+
+.farm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+.farm-page table { width:100%; border-collapse:collapse; }
+.farm-page th,.farm-page td { text-align:left; padding:10px; border-bottom:1px solid #dbe4df; }

@@ -1,0 +1,31 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
+import { allRecords, amount, errorMessage } from '../services/foundation'
+export default function HistoryImport(){
+  const {user}=useAuth(),[locations,setLocations]=useState([]),[products,setProducts]=useState([]),[location,setLocation]=useState(''),[product,setProduct]=useState(''),[file,setFile]=useState(null),[preview,setPreview]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[confirmed,setConfirmed]=useState(false)
+  useEffect(()=>{if(!user.is_admin)return;Promise.all([allRecords('/v1/locations'),allRecords('/v1/products')]).then(([l,p])=>{setLocations(l.filter(x=>x.location_type==='FARM'));setProducts(p)}).catch(e=>setError(errorMessage(e)))},[user.is_admin])
+  function reset(){setPreview(null);setConfirmed(false);setError('')}
+  async function submit(commit=false){setBusy(true);setError('');try{
+    const data=new FormData();data.append('file',file);data.append('location_id',location);data.append('product_id',product);data.append('commit',String(commit));if(commit)data.append('preview_hash',preview.preview_hash)
+    const {data:r}=await api.post('/v1/admin/import-csv',data,{headers:{'Content-Type':'multipart/form-data'}});setPreview(r);setConfirmed(false)
+  }catch(e){setError(errorMessage(e));setPreview(null)}finally{setBusy(false)}}
+  function template(){const blob=new Blob(['date,quantity,stockout,source\n'],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='agristat-farm-history-template.csv';a.click();URL.revokeObjectURL(url)}
+  if(!user.is_admin)return <div className="workspace-page"><h1>Farm history import</h1><div className="notice">An administrator must review and import historical records. <Link to="/dashboard">Return to overview</Link>.</div></div>
+  const selected=products.find(p=>p.id===Number(product))
+  return <div className="workspace-page"><header className="page-heading"><div><p className="eyebrow">BUILD A TRUSTWORTHY HISTORY</p><h1>Import farm history</h1><p className="muted">Bring genuine daily sales totals into demand planning—without changing current stock.</p></div><button className="secondary" onClick={template}>Download blank CSV template</button></header>
+    <div className="import-steps" aria-label="Import steps"><span className={!preview?'current':''}>1 · Choose records</span><span className={preview?.status==='preview'?'current':''}>2 · Review every check</span><span className={preview?.status==='imported'?'current':''}>3 · Confirm import</span></div>
+    {error&&<div className="error-banner" role="alert">{error}</div>}
+    <section className="panel"><h2>Choose a farm, produce and CSV</h2><p>One row must represent one completed day. Use the product’s base unit, include genuine zero-sale days, and mark stockouts. Public market price files are not farm sales history.</p>
+      <div className="form-grid"><label>Farm<select value={location} disabled={busy} onChange={e=>{setLocation(e.target.value);reset()}}><option value="">Choose farm</option>{locations.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label>Produce<select value={product} disabled={busy} onChange={e=>{setProduct(e.target.value);reset()}}><option value="">Choose produce</option>{products.map(p=><option key={p.id} value={p.id}>{p.name} ({p.unit})</option>)}</select></label>
+      <label className="full">UTF-8 CSV file · maximum 1 MB / 5,000 rows<input className="file-input" type="file" accept=".csv,text/csv" disabled={busy} onChange={e=>{setFile(e.target.files[0]||null);reset()}}/></label></div>
+      <p className="muted">Required headers: <code>date,quantity,stockout,source</code>. Dates use YYYY-MM-DD. Stockout uses true or false. Source identifies the real book, receipt system or record you checked. Quantities are in {selected?.unit||'the selected product’s base unit'}.</p>
+      <button disabled={!file||!location||!product||busy} onClick={()=>submit(false)}>{busy?'Checking…':'Preview and validate'}</button>
+    </section>
+    {preview?.status==='invalid'&&<section className="panel" style={{marginTop:24}} role="alert"><h2>Nothing imported</h2><p>{preview.error_count} row errors found. Correct the source file and preview it again. Existing records will not be overwritten.</p><div className="table-scroll"><table><thead><tr><th>CSV line</th><th>Problem</th></tr></thead><tbody>{preview.errors.map((e,i)=><tr key={i}><td>{e.line}</td><td>{e.message}</td></tr>)}</tbody></table></div></section>}
+    {preview?.status==='preview'&&<section className="panel" style={{marginTop:24}}><h2>Review before importing</h2><p><strong>{preview.row_count} days</strong> · {preview.first_date} to {preview.last_date} · {amount(preview.total_quantity)} {preview.unit} sold · {preview.stockout_days} stockout days.</p><p className="muted">All rows have been checked. This is a sample of the first 10 rows.</p><div className="table-scroll"><table><thead><tr><th>Date</th><th>Quantity</th><th>Stockout</th><th>Source</th></tr></thead><tbody>{preview.sample.map(r=><tr key={r.date}><td>{r.date}</td><td>{amount(r.quantity)} {preview.unit}</td><td>{r.stockout?'Yes':'No'}</td><td>{r.source}</td></tr>)}</tbody></table></div>
+      <label style={{display:'flex',alignItems:'center',gap:12,margin:'24px 0'}}><input type="checkbox" style={{width:24,height:24,minHeight:24}} checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} disabled={busy}/>I checked that these are genuine, complete farm sales totals in the correct unit.</label><button disabled={!confirmed||busy} onClick={()=>submit(true)}>{busy?'Importing…':`Import ${preview.row_count} confirmed days`}</button><p className="muted">All rows are saved together. The import does not create harvest batches or stock deductions.</p></section>}
+    {preview?.status==='imported'&&<section className="success-banner" style={{marginTop:24}} role="status"><h2>{preview.imported_rows} daily records imported</h2><p>Your current inventory is unchanged. Review the history and request model validation on <Link to="/demand-planning">Demand planning</Link>.</p></section>}
+  </div>
+}

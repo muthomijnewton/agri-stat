@@ -13,11 +13,8 @@ from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent  # backend/
 
-# Load backend/.env explicitly. override=True ensures values from the file
-# win over any pre-existing OS environment variables for keys present in
-# the file (useful for CI/CD).  Keys absent from the file (like DATABASE_URL
-# when using the fallback) are left to the OS environment or the default below.
-load_dotenv(dotenv_path=BACKEND_DIR / ".env", override=True)
+# Load local defaults; process/container configuration takes precedence.
+load_dotenv(dotenv_path=BACKEND_DIR / ".env", override=False)
 
 # ==========================================================
 # DATABASE
@@ -47,9 +44,9 @@ if not _raw_db_url or _is_relative_sqlite(_raw_db_url):
 else:
     DATABASE_URL = _raw_db_url
 
-# Render sometimes provides postgres:// instead of postgresql://
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Select the installed driver explicitly; SQLAlchemy defaults differ by version.
+if DATABASE_URL.startswith(("postgres://", "postgresql://")):
+    DATABASE_URL = "postgresql+psycopg2://" + DATABASE_URL.split("://", 1)[1]
 
 # ==========================================================
 # API SETTINGS

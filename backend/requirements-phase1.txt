@@ -1,0 +1,4 @@
+# Redis 5.2 keeps compatibility with the existing PyJWT 2.8 pin.
+celery==5.4.0
+kombu==5.4.2
+redis==5.2.1

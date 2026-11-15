@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// Vite exposes env vars via import.meta.env (VITE_ prefix only).
+// Next.js exposes this public API URL to browser code.
 // Falls back to the local dev backend if the variable is not set.
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api'
 
 const api = axios.create({
   baseURL: API_URL,

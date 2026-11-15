@@ -112,3 +112,9 @@ mobile/**/*.freezed.dart
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local migration backups, datasets, and scratch files
+work/
+
+web/.next/
+web/out/

@@ -33,7 +33,7 @@ def get_product(
     _: User = Depends(get_current_user),
 ):
     """Get a specific product by ID."""
-    product = db.query(Product).filter(Product.id == product_id).first()
+    product = db.query(Product).filter(Product.id == product_id, Product.is_active.is_(True)).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product

@@ -23,3 +23,6 @@ PyJWT==2.8.0
 pytest>=8.0.0
 pytest-cov>=5.0.0
 httpx==0.23.3
+-r requirements-phase1.txt
+
+lightgbm==4.6.0

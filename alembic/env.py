@@ -21,7 +21,7 @@ from alembic import context
 
 from app.core.config import DATABASE_URL
 from app.db.database import Base
-from app.models import models
+from app.models import models, operations, planning
 
 # Alembic Config object
 config = context.config
@@ -63,6 +63,15 @@ def run_migrations_online() -> None:
     """
     Run migrations connected to the database.
     """
+
+    supplied_connection = config.attributes.get("connection")
+    if supplied_connection is not None:
+        context.configure(connection=supplied_connection, target_metadata=target_metadata,
+                          version_table_schema=config.attributes.get("version_table_schema"),
+                          compare_type=True, render_as_batch=supplied_connection.dialect.name == "sqlite")
+        with context.begin_transaction():
+            context.run_migrations()
+        return
 
     connectable = create_engine(
         DATABASE_URL,

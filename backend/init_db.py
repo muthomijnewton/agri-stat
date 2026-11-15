@@ -35,7 +35,8 @@ from app.core.security import get_password_hash, password_is_hashed
 def init_database():
     """Create all tables in the database"""
     logger.info("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
+    from app.db.migrate import migrate_database
+    migrate_database(engine)
     logger.info("Database tables created")
 
 def add_default_user():

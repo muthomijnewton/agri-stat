@@ -10,6 +10,10 @@ from app.api.endpoints import (
     stats,
     exports,
     imports,
+    foundation,
+    operations,
+    planning,
+    dashboard,
 )
 
 api_router = APIRouter()
@@ -24,3 +28,10 @@ api_router.include_router(notifications.router)
 api_router.include_router(stats.router)
 api_router.include_router(exports.router)
 api_router.include_router(imports.router)
+api_router.include_router(foundation.router)
+
+api_router.include_router(operations.router)
+
+api_router.include_router(planning.router)
+
+api_router.include_router(dashboard.router)

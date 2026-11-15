@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,12 +21,12 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan handler (replaces deprecated @app.on_event).
 
-    Startup: create tables if they don't exist, then seed default user and
-    sample data on first boot.
+    Startup: migrate tables, create the local login, optionally load demo data.
     """
     init_database()   # creates all tables (no-op if they already exist)
     add_default_user()
-    add_sample_data()
+    if os.getenv("SEED_SAMPLE_DATA", "false").lower() == "true":
+        add_sample_data()
     yield
     # (shutdown logic goes here if needed)
 

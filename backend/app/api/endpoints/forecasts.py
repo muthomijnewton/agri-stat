@@ -5,7 +5,7 @@ from app.models.models import Forecast, Product, User
 from app.schemas.schemas import ForecastCreate, ForecastUpdate, ForecastResponse
 from app.core.security import get_current_user
 from app.services.forecasting import ForecastingService
-from typing import List, Optional
+from typing import List, Literal, Optional
 from datetime import date
 
 router = APIRouter(prefix="/api/forecasts", tags=["forecasts"])
@@ -41,7 +41,7 @@ def list_forecasts(
 @router.post("/generate/{product_id}", status_code=status.HTTP_201_CREATED)
 def generate_forecast(
     product_id: int,
-    model: str = Query(default="auto", enum=["auto", "prophet", "arima"]),
+    model: Literal["auto", "prophet", "arima"] = Query(default="auto"),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
@@ -101,7 +101,7 @@ def _run_generate_all(model: str, db: Session) -> None:
 @router.post("/generate-all", status_code=status.HTTP_202_ACCEPTED)
 def generate_all_forecasts(
     background_tasks: BackgroundTasks,
-    model: str = Query(default="auto", enum=["auto", "prophet", "arima"]),
+    model: Literal["auto", "prophet", "arima"] = Query(default="auto"),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
